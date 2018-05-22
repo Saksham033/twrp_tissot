@@ -75,6 +75,7 @@ service treblecompat /vendor/bin/init.treblecompat.sh
 	class core
 	user root
 	group root
+	seclabel u:r:shell:s0
 	oneshot
 
 #start camera server as daemon
