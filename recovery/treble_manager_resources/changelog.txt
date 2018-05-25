@@ -1,0 +1,22 @@
+<b>1.2</b>
+
+<*>Support flashing img files to vendor and system (e.g. GSI's)</*>
+
+
+
+<b>1.1</b>
+
+<*>Treble Manager will now copy any saved log file to the microSD root</*>
+<*>Treble Manager will now reboot recovery when changing partitions to ensure new partition changes are loaded by Recovery</*>
+
+
+
+<b>1.0</b>
+
+<*>Initial version</*>
+<*>Aroma-based 'Treble Manager' button added to TWRP Main Menu > Advanced</*>
+<*>Has choice to shrink userdata or system to create new vendor partition</*>
+<*>Can restore stock partition map from either Treble state.</*>
+
+
+

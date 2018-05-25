@@ -216,7 +216,8 @@ BOARD_USES_QCOM_HARDWARE := true
 TARGET_USE_SDCLANG := true
 
 # Recovery
-TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/rootdir/fstab.qcom
+# Replaced with TWRP fstab near bottom
+#TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/rootdir/fstab.qcom
 
 # RIL
 TARGET_RIL_VARIANT := caf
@@ -249,3 +250,29 @@ WIFI_HIDL_FEATURE_AWARE := true
 
 # Inherit from the proprietary version
 -include vendor/xiaomi/tissot/BoardConfigVendor.mk
+
+# TWRP
+# Source - https://forum.xda-developers.com/android/software/twrp-flags-boardconfig-mk-t3333970
+RECOVERY_VARIANT := twrp
+TW_THEME := portrait_hdpi
+RECOVERY_SDCARD_ON_DATA := true
+TW_EXCLUDE_SUPERSU := true
+TW_HAS_NO_RECOVERY_PARTITION := true
+TW_INCLUDE_INJECTTWRP := false
+TW_INCLUDE_CRYPTO := true
+TW_BRIGHTNESS_PATH := "/sys/class/leds/lcd-backlight/brightness"
+TW_MAX_BRIGHTNESS := 255
+TW_DEFAULT_BRIGHTNESS := 150
+TARGET_RECOVERY_QCOM_RTC_FIX := true
+# TWRP extra by CosmicDan
+TW_INCLUDE_FB2PNG := true
+TWRP_INCLUDE_LOGCAT := true
+# Default fstab (it will be replaced by recovery.sh bootstrap with correct version automatically)
+TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery/root/etc/fstab.twrp.treble
+#TW_CUSTOM_THEME
+# TWRP extra fixes thanks to mohancm
+TW_INPUT_BLACKLIST := "hbtp_vm"
+TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
+RECOVERY_GRAPHICS_USE_LINELENGTH := true
+TW_SCREEN_BLANK_ON_BOOT := true
+BOARD_SUPPRESS_SECURE_ERASE := true
