@@ -3,13 +3,22 @@
 # Script for making boot-recovery.img from existing tissot out files (patches-out skip_initramfs)
 #
 
-IMAGE_SOURCE=../../../../out/target/product/tissot/obj/KERNEL_OBJ/arch/arm64/boot/Image
-IMAGE_TARGET=../../../../out/target/product/tissot/ImageSkipInitRamFs
-IMAGE_GZ_TARGET=../../../../out/target/product/tissot/ImageSkipInitRamFs.gz
-DTB_SOURCE=../../../../out/target/product/tissot/obj/KERNEL_OBJ/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3.dtb
-IMAGE_GZ_DTB_TARGET=../../../../out/target/product/tissot/ImageSkipInitRamFs.gz-dtb
-RAMDISK_SOURCE=../../../../out/target/product/tissot/ramdisk-recovery.img
-BOOT_RECOVERY_TARGET=../../../../out/target/product/tissot/boot-recovery.img
+SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+RAMDISK_FILE=ramdisk-recovery.img
+OUT_DIR=../../../../out/target/product/tissot
+# boot-recovery.img stuff
+IMAGE_SOURCE=$OUT_DIR/obj/KERNEL_OBJ/arch/arm64/boot/Image
+IMAGE_TARGET=$OUT_DIR/ImageSkipInitRamFs
+IMAGE_GZ_TARGET=$OUT_DIR/ImageSkipInitRamFs.gz
+DTB_SOURCE=$OUT_DIR/obj/KERNEL_OBJ/arch/arm64/boot/dts/qcom/msm8953-qrd-sku3.dtb
+IMAGE_GZ_DTB_TARGET=$OUT_DIR/ImageSkipInitRamFs.gz-dtb
+RAMDISK_SOURCE=$OUT_DIR/$RAMDISK_FILE
+BOOT_RECOVERY_TARGET=$OUT_DIR/boot-recovery.img
+# recovery-installer stuff
+RECOVERY_INSTALLER_TEMPLATE=treble_installer_template.zip
+RECOVERY_INSTALLER_OUT=recovery-installer.zip
+
+echo "[#] Making boot-recovery.img..."
 
 # Copy uncompressed kernel image
 cp -f "$IMAGE_SOURCE" "$IMAGE_TARGET"
@@ -36,5 +45,12 @@ rm "$IMAGE_GZ_TARGET"
 
 rm "$IMAGE_GZ_DTB_TARGET"
 if [ -f "$BOOT_RECOVERY_TARGET" ]; then
-	echo "[i] Successfully built boot-recovery.img at $BOOT_RECOVERY_TARGET"
+	echo "    [i] Successfully built boot-recovery.img at $BOOT_RECOVERY_TARGET"
 fi
+
+echo "[#] Making recovery-installer.zip..."
+cp -f treble_installer_template.zip "$OUT_DIR/$RECOVERY_INSTALLER_OUT"
+cd $OUT_DIR
+zip -u -1 -9 "$RECOVERY_INSTALLER_OUT" "$RAMDISK_FILE"
+cd $SCRIPT_PATH
+echo "    [i] Done"
