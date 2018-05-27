@@ -1,2 +1,0 @@
- - Official TWRP checked-out to android/bootable/recovery-twrp
- - Busybox cloned from https://github.com/omnirom/android_external_busybox
