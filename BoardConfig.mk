@@ -266,7 +266,6 @@ TW_DEFAULT_BRIGHTNESS := 150
 TARGET_RECOVERY_QCOM_RTC_FIX := true
 # TWRP extra by CosmicDan
 TW_INCLUDE_FB2PNG := true
-TWRP_INCLUDE_LOGCAT := true
 # Default fstab (it will be replaced by recovery.sh bootstrap with correct version automatically)
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery/root/etc/fstab.twrp.treble
 TW_CUSTOM_THEME := $(DEVICE_PATH)/recovery/twrp-res
