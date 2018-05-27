@@ -69,6 +69,7 @@
 		<string name="file">File</string>
 		<string name="enable_legacy_props_chk">Enable legacy properties for old zips</string>
 		<string name="inject_twrp_chk">Inject TWRP after install</string>
+		<string name="zip_sig_chk">Zip signature verification</string>
 		<string name="install_reboot_chk">Reboot after installation is complete</string>
 		<string name="options_hdr">Options</string>
 		<string name="zip_queue">Queue:</string>

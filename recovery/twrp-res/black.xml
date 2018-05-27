@@ -24,14 +24,6 @@
 			</button>
 
 			<button>
-				<placement x="%ab_btn2_x%" y="%ab_y%"/>
-				<image resource="actionbar_theme" highlightresource="actionbar_theme_hl"/>
-				<action function="set">tw_filecheck=%tw_theme_path%/ui.zip</action>
-				<action function="set">tw_back=main</action>
-				<action function="page">themecheck</action>
-			</button>
-
-			<button>
 				<placement x="%ab_btn1_x%" y="%ab_y%"/>
 				<image resource="actionbar_settings" highlightresource="actionbar_settings_hl"/>
 				<action function="page">settings</action>
