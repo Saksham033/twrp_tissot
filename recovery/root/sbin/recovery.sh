@@ -22,6 +22,12 @@ if [ -L /system ]; then
 	mkdir /system
 fi
 
+# fix for bootctl
+ln -s /dev/block/mmcblk0 /dev/mmcblk0
+
+# fix update_engine_sideload fstab
+sed -i 's|/etc/recovery.fstab|/////////fstab.qcom|' /sbin/update_engine_sideload
+
 # start recovery
 /sbin/recovery &
 
