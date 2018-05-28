@@ -216,8 +216,7 @@ BOARD_USES_QCOM_HARDWARE := true
 TARGET_USE_SDCLANG := true
 
 # Recovery
-# Replaced with TWRP fstab near bottom
-#TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/rootdir/fstab.qcom
+TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/rootdir/fstab.qcom
 
 # RIL
 TARGET_RIL_VARIANT := caf
@@ -265,9 +264,11 @@ TW_MAX_BRIGHTNESS := 255
 TW_DEFAULT_BRIGHTNESS := 150
 TARGET_RECOVERY_QCOM_RTC_FIX := true
 # TWRP extra by CosmicDan
+TARGET_RECOVERY_DEVICE_MODULES += android.hardware.boot@1.0
+TW_RECOVERY_ADDITIONAL_RELINK_FILES := $(OUT)/system/lib64/android.hardware.boot@1.0.so
+TWRP_INCLUDE_LOGCAT := true
+TARGET_USES_LOGD := true
 TW_INCLUDE_FB2PNG := true
-# Default fstab (it will be replaced by recovery.sh bootstrap with correct version automatically)
-TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery/root/etc/fstab.twrp.treble
 TW_CUSTOM_THEME := $(DEVICE_PATH)/recovery/twrp-res
 # TWRP extra fixes thanks to mohancm
 TW_INPUT_BLACKLIST := "hbtp_vm"

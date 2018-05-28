@@ -43,6 +43,9 @@ on fs
     chmod 0664 /dev/ion
     chown system system /dev/ion
 
+    start hwservicemanager
+    start servicemanager
+
 on property:ro.crypto.state=encrypted
     start sbinqseecomd
 
@@ -59,4 +62,23 @@ service treble_manager_launch /sbin/sh /sbin/treble_manager_launch.sh
     disabled
     oneshot
     seclabel u:r:recovery:s0
+
+service hwservicemanager /sbin/hwservicemanager
+    user root
+    group root
+    disabled
+    onrestart setprop hwservicemanager.ready false
+    seclabel u:r:recovery:s0
+
+service boot-1-0 /sbin/android.hardware.boot@1.0-service
+    user root
+    group root
+    seclabel u:r:recovery:s0
+
+service servicemanager /sbin/servicemanager
+    disabled
+    user root
+    group root readproc
+    seclabel u:r:recovery:s0
+    writepid /dev/cpuset/system-background/tasks
 
