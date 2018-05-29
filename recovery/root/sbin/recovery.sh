@@ -9,11 +9,11 @@
 source /treble_manager/constants.sh
 
 # check mount situation and use appropriate fstab
-rm /etc/recovery.fstab
+rm /etc/twrp.flags
 if [ -b "$vendor_a_blockdev" -a -b "$vendor_b_blockdev" ]; then
-	ln -sn /etc/fstab.twrp.treble /etc/recovery.fstab
+	ln -sn /etc/twrp.flags.treble /etc/twrp.flags
 else
-	ln -sn /etc/fstab.twrp.stock /etc/recovery.fstab
+	ln -sn /etc/twrp.flags.stock /etc/twrp.flags
 fi;
 
 # replace system symlink with directory (can't do this in build shell for whatever reason)
@@ -22,11 +22,8 @@ if [ -L /system ]; then
 	mkdir /system
 fi
 
-# fix for bootctl
+# Needed for boot control HAL to update GPT partition info
 ln -s /dev/block/mmcblk0 /dev/mmcblk0
-
-# fix update_engine_sideload fstab
-sed -i 's|/etc/recovery.fstab|/////////fstab.qcom|' /sbin/update_engine_sideload
 
 # start recovery
 /sbin/recovery &
