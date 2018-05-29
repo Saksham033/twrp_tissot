@@ -6,7 +6,7 @@
 # 2 = Treble with System-shrunk
 # 3 = Treble with Userdata-shrunk
 
-source /treble_manager/constants.sh
+source /tissot_manager/constants.sh
 
 # Initial status var's
 system_a_status=invalid

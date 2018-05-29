@@ -6,7 +6,7 @@
 #  - symlink to the correct fstab depending on Treble partition state
 #
 
-source /treble_manager/constants.sh
+source /tissot_manager/constants.sh
 
 # check mount situation and use appropriate fstab
 rm /etc/twrp.flags

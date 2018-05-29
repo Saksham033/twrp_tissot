@@ -57,8 +57,8 @@ service sbinqseecomd /sbin/qseecomd
     group root
     seclabel u:r:recovery:s0
 
-# Treble Manager launch (called by treble_manager.sh rather than TWRP directly, since we need to fix perms and kill recovery first)
-service treble_manager_launch /sbin/sh /sbin/treble_manager_launch.sh
+# Tissot Manager launch (called by tissot_manager.sh rather than TWRP directly, since we need to fix perms and kill recovery first)
+service tissot_manager_launch /sbin/sh /sbin/tissot_manager_launch.sh
     disabled
     oneshot
     seclabel u:r:recovery:s0

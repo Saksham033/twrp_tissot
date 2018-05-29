@@ -1,5 +1,5 @@
 #!/sbin/sh
-# Treble Manager install script by CosmicDan
+# Tissot Manager install script by CosmicDan
 # Parts based on AnyKernel2 Backend by osm0sis
 #
 
@@ -36,8 +36,8 @@ done
 sleep 2
 blockdev --rereadpt /dev/block/mmcblk0
 
-source /treble_manager/constants.sh
-/sbin/sh /treble_manager/get_partition_status.sh
+source /tissot_manager/constants.sh
+/sbin/sh /tissot_manager/get_partition_status.sh
 partition_status=$?
 
 choice=`file_getprop /tmp/aroma/choice_repartition.prop root`
@@ -159,6 +159,6 @@ while read line || [ -n "$line" ]; do
     ui_print "$line"
 done < /tmp/aroma/credits.txt
 ui_print " ";
-ui_print "<#009>Be sure to select 'Save Logs' in case you need to report a bug. Will be saved to microSD root as 'treble_manager.log'.</#>";
+ui_print "<#009>Be sure to select 'Save Logs' in case you need to report a bug. Will be saved to microSD root as 'tissot_manager.log'.</#>";
 set_progress "1.0"
 

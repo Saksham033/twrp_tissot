@@ -15,7 +15,7 @@ IMAGE_GZ_DTB_TARGET=$OUT_DIR/ImageSkipInitRamFs.gz-dtb
 RAMDISK_SOURCE=$OUT_DIR/$RAMDISK_FILE
 BOOT_RECOVERY_TARGET=$OUT_DIR/boot-recovery.img
 # recovery-installer stuff
-RECOVERY_INSTALLER_TEMPLATE=treble_installer_template.zip
+RECOVERY_INSTALLER_TEMPLATE=recovery_installer_template.zip
 RECOVERY_INSTALLER_OUT=recovery-installer.zip
 
 echo "[#] Making boot-recovery.img..."
@@ -49,7 +49,7 @@ if [ -f "$BOOT_RECOVERY_TARGET" ]; then
 fi
 
 echo "[#] Making recovery-installer.zip..."
-cp -f treble_installer_template.zip "$OUT_DIR/$RECOVERY_INSTALLER_OUT"
+cp -f "$RECOVERY_INSTALLER_TEMPLATE" "$OUT_DIR/$RECOVERY_INSTALLER_OUT"
 cd $OUT_DIR
 zip -u -1 -9 "$RECOVERY_INSTALLER_OUT" "$RAMDISK_FILE"
 cd $SCRIPT_PATH

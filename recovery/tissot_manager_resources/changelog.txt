@@ -1,3 +1,11 @@
+<b>1.3</b>
+
+<*>Renamed to Tissot Manager</*>
+<*>Fix USB-OTG</*>
+<*>Version bump for new source-built TWRP</*>
+
+
+
 <b>1.2</b>
 
 <*>Support flashing img files to vendor and system (e.g. GSI's)</*>

@@ -12187,7 +12187,7 @@
 				</actions>
 			</button>
 			
-			<!-- Add Treble Manager entry -->
+			<!-- Add Tissot Manager entry -->
 			
 			<fill color="%linecolor%">
 				<condition var1="menu_btn_solid" var2="0"/>
@@ -12219,20 +12219,20 @@
 
 			<text style="mb_text">
 				<placement x="%col1_x_indent%" y="%mb_row8_text_y%"/>
-				<text>{@treble_manager_hdr=Treble Manager}</text>
+				<text>{@tissot_manager_hdr=Tissot Manager}</text>
 			</text>
 
 			<button style="mb_btn">
 				<placement x="%col1_x%" y="%mb_row8_y%" w="%content_w%" h="%mb_h%"/>
 				<actions>
 					<action function="set">tw_action=cmd</action>
-					<action function="set">tw_action_param=/sbin/sh /sbin/treble_manager.sh</action>
+					<action function="set">tw_action_param=/sbin/sh /sbin/tissot_manager.sh</action>
 					<action function="set">tw_has_action2=0</action>
 					<action function="page">singleaction_page</action>
 				</actions>
 			</button>
 			
-			<!-- End add Treble Manager entry -->
+			<!-- End add Tissot Manager entry -->
 
 			<action>
 				<touch key="home"/>

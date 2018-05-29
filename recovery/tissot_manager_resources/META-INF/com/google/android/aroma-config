@@ -56,7 +56,7 @@ ini_set("icon_next", "@next");
 # gather information about existing partition map
 # Not necessary, happens in a split second
 #pleasewait("Reading your partition table...");
-setvar("partition_status", exec("/sbin/sh", "/treble_manager/get_partition_status.sh"));
+setvar("partition_status", exec("/sbin/sh", "/tissot_manager/get_partition_status.sh"));
 setvar("partition_status_text", "Unrecognized");
 setvar("repartition_subtext", "Repartition unavailable - unrecognized partition layout");
 if (getvar("partition_status") == 1) then
@@ -179,7 +179,7 @@ if prop("choice_main_menu.prop","selected")=="3" then
     ini_set("icon_next", "@home");
     textbox(
         "Credits",
-        "Thanks and credits for Treble Manager",
+        "Thanks and credits for Tissot Manager",
         "@credits",
         read("/tmp/aroma/credits.txt")
     );
