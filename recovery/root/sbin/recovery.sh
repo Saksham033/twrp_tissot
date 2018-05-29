@@ -16,6 +16,12 @@ else
 	ln -sn /etc/twrp.flags.stock /etc/twrp.flags
 fi;
 
+# insert our update_engine_sideload bootstrap
+if [ -f /sbin/update_engine_sideload ]; then
+	mv /sbin/update_engine_sideload /sbin/update_engine_sideload_real
+	mv /sbin/update_engine_sideload.sh /sbin/update_engine_sideload
+fi;
+
 # replace system symlink with directory (can't do this in build shell for whatever reason)
 if [ -L /system ]; then
 	rm /system
