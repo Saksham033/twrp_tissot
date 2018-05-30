@@ -1,3 +1,9 @@
+<b>1.5</b>
+
+<*>Fix device lock from new encryption service breaking repartition</*>
+
+
+
 <b>1.4</b>
 
 <*>Fixed decrypting storage</*>
