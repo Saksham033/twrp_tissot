@@ -2,6 +2,7 @@
 
 <*>Fix device lock from new encryption service breaking repartition</*>
 <*>Maintain 16KB footer for userdata encryption when shrinking (requires repartition back to stock then shrink userdata again)</*>
+<*>Update mkfs.f2fs binary to 1.2.0 (supports length argument). F2FS is unsupported and untested.</*>
 
 
 
