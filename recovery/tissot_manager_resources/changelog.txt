@@ -1,6 +1,7 @@
 <b>1.5</b>
 
 <*>Fix device lock from new encryption service breaking repartition</*>
+<*>Maintain 16KB footer for userdata encryption when shrinking (requires repartition back to stock then shrink userdata again)</*>
 
 
 

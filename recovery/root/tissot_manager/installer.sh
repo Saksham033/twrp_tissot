@@ -82,7 +82,11 @@ if [ "$choice" == "stock" ]; then
 			sleep 2
 			blockdev --rereadpt /dev/block/mmcblk0
 			sleep 1
-			make_ext4fs /dev/block/mmcblk0p$userdata_partnum
+			# Calculate the length of userdata for make_ext4fs minus 16KB (for the encryption footer reservation)
+			userdata_new_partlength_sectors=`echo $((userdata_partend_current-userdata_stock_partstart))`
+			userdata_new_partlength_bytes=`echo $((userdata_new_partlength_sectors*512))`
+			userdata_new_ext4size=`echo $((userdata_new_partlength_bytes-16384))`
+			make_ext4fs -a /data -l $userdata_new_ext4size /dev/block/mmcblk0p$userdata_partnum_current
 		else
 			ui_print "[!] Could not verify Userdata partition info. Resizing Userdata aborted."
 		fi;
@@ -113,7 +117,11 @@ elif [ "$choice" == "treble_userdata" ]; then
 	sleep 2
 	blockdev --rereadpt /dev/block/mmcblk0
 	sleep 1
-	make_ext4fs /dev/block/mmcblk0p$userdata_partnum_current
+	# Calculate the length of userdata for make_ext4fs minus 16KB (for the encryption footer reservation)
+	userdata_new_partlength_sectors=`echo $((userdata_partend_current-userdata_treble_partstart))`
+	userdata_new_partlength_bytes=`echo $((userdata_new_partlength_sectors*512))`
+	userdata_new_ext4size=`echo $((userdata_new_partlength_bytes-16384))`
+	make_ext4fs -a /data -l $userdata_new_ext4size /dev/block/mmcblk0p$userdata_partnum_current
 	ui_print "[#] Formatting vendor_a and vendor_b..."
 	sleep 2
 	make_ext4fs /dev/block/mmcblk0p$vendor_a_partnum
