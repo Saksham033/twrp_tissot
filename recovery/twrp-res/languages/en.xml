@@ -70,6 +70,7 @@
 		<string name="file_selector_folders_hdr">Folders</string>
 		<string name="select_file_from_storage">Select File from %tw_storage_display_name% (%tw_storage_free_size% MB)</string>
 		<string name="adb_sideload_btn">ADB Sideload</string>
+		<string name="tissot_manager">Tissot Manager</string>
 		<string name="install_hdr">Install</string>
 		<string name="select_storage_hdr">Select Storage</string>
 		<string name="select_storage_btn">Select Storage</string>
@@ -461,7 +462,6 @@
 		<string name="term_kill_btn">KILL</string>
 		<string name="term_sel_folder_hdr">Browse to Starting Folder</string>
 		<string name="adb_sideload_hdr">ADB Sideload</string>
-		<string name="tissot_manager">Tissot Manager</string>
 		<string name="sideload_wipe_dalvik_chk">Wipe Dalvik Cache</string>
 		<string name="sideload_wipe_cache_chk">Wipe Cache</string>
 		<string name="swipe_to_sideload">Swipe to Start Sideload</string>
