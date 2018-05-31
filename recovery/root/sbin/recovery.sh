@@ -8,6 +8,12 @@
 
 source /tissot_manager/constants.sh
 
+# check for dualboot mode (second userdata partition)
+if [ -b "/dev/block/mmcblk0p52" ]; then
+	mv /etc/recovery.fstab /etc/recovery.fstab.singleboot
+	mv /etc/recovery.fstab.dualboot /etc/recovery.fstab
+fi
+
 # check mount situation and use appropriate fstab
 rm /etc/twrp.flags
 if [ -b "$vendor_a_blockdev" -a -b "$vendor_b_blockdev" ]; then
