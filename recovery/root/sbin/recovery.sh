@@ -8,6 +8,8 @@
 
 source /tissot_manager/constants.sh
 
+chmod -R 777 /tissot_manager/*
+
 # check for dualboot mode (second userdata partition)
 if [ -b "/dev/block/mmcblk0p52" ]; then
 	mv /etc/recovery.fstab /etc/recovery.fstab.singleboot

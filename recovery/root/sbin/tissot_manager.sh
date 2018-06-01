@@ -1,6 +1,5 @@
 #!/sbin/sh
 
-chmod 777 /tissot_manager/*
 start tissot_manager_launch
 sleep 1
 kill `pidof recovery`

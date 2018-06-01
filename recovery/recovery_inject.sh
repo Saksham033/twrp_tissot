@@ -16,9 +16,9 @@ echo "    [#] Rewinding datestamp to fix 'downgrade not allowed' errors..."
 sed -i 's/ro\.build\.date\.utc=.*/ro\.build\.date\.utc=0/' "$TARGET_RECOVERY_ROOT_OUT/prop.default"
 
 echo "    [#] Zipping Aroma resources (for Tissot Manager gui)..."
-rm "$TARGET_RECOVERY_ROOT_OUT/tissot_manager/aroma_res.zip" > /dev/null 2>&1
+rm "$TARGET_RECOVERY_ROOT_OUT/tissot_manager/tissot_manager.zip" > /dev/null 2>&1
 cd "$DEVICE_RECOVERY_PATH/tissot_manager_resources"
-zip -rq -1 "$TARGET_RECOVERY_ROOT_OUT/tissot_manager/aroma_res.zip" *
+zip -rq -1 "$TARGET_RECOVERY_ROOT_OUT/tissot_manager/tissot_manager.zip" *
 cd "$DEVICE_RECOVERY_PATH"
 
 echo "[i] All done!"
