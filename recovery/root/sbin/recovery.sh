@@ -7,6 +7,7 @@
 #
 
 source /tissot_manager/constants.sh
+. /tissot_manager/tools.sh
 
 chmod -R 777 /tissot_manager/*
 
