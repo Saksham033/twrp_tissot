@@ -5,33 +5,7 @@
 #  - 
 #
 
-ui_print() {
-	if [ "$OUT_FD" ]; then		
-		if [ "$1" ]; then
-			echo "ui_print $1" > "$OUT_FD"
-		else
-			echo "ui_print  " > "$OUT_FD"
-		fi
-	else
-		echo "$1"
-	fi
-}
-
-# set to a fraction (where 1.0 = 100%)
-set_progress() {
-	echo "set_progress $1" > "$OUT_FD"
-}
-
-# find the recovery text output pipe
-for l in /proc/self/fd/*; do 
-	# set the last pipe: target
-	if readlink $l | grep -Fqe "pipe:"; then
-		OUT_FD=$l
-	fi
-done
-
-. /tissot_manager/tools.sh
-
+source /tissot_manager/tools.sh
 
 ui_print
 ui_print

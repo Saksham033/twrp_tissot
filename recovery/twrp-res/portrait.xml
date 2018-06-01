@@ -175,7 +175,7 @@
 			<text style="text_m">
 				<condition var1="tw_no_cpu_temp" var2="0"/>
 				<placement x="%col1_x_header%" y="%row4_header_y%"/>
-				<text>%tw_version%</text>
+				<text>%tw_version% presented by CosmicDan | Current Slot: %tw_active_slot%</text>
 			</text>
 
 			<button style="main_button">
@@ -627,7 +627,8 @@
 				<text>{@swipe_flash=Swipe to confirm Flash}</text>
 				<actions>
 					<action function="set">tw_back=flashimage_confirm</action>
-					<action function="set">tw_action=flashimage</action>
+					<action function="set">tw_action=cmd</action>
+					<action function="set">tw_action_param=/tissot_manager/flash_image.sh %tw_filename% %tw_flash_partition%</action>
 					<action function="set">tw_has_action2=0</action>
 					<action function="set">tw_action_text1={@flashing_image=Flashing Image...}</action>
 					<action function="set">tw_action_text2=</action>

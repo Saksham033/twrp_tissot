@@ -7,7 +7,7 @@
 #
 
 source /tissot_manager/constants.sh
-. /tissot_manager/tools.sh
+source /tissot_manager/tools.sh
 
 chmod -R 777 /tissot_manager/*
 
@@ -25,8 +25,8 @@ else
 	ln -sn /etc/twrp.flags.stock /etc/twrp.flags
 fi;
 
-# insert our update_engine_sideload bootstrap
-if [ -f /sbin/update_engine_sideload ]; then
+# insert binary bootstraps
+if [ -f /sbin/update_engine_sideload -a -f /sbin/update_engine_sideload.sh ]; then
 	mv /sbin/update_engine_sideload /sbin/update_engine_sideload_real
 	mv /sbin/update_engine_sideload.sh /sbin/update_engine_sideload
 fi;
