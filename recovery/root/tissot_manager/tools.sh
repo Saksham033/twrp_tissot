@@ -195,6 +195,8 @@ shouldDoPayloadInstall() {
 		mkdir /system_new_slot
 	fi
 	chmod 777 /system_new_slot
+	umount -f /system
+	umount -f /system_new_slot
 	mount -o ro /dev/block/bootdevice/by-name/system_$targetSlot /system_new_slot
 	if [ -f "/system_new_slot/system/build.prop" ]; then
 		# don't bother with any of this if it's an empty slot
@@ -218,6 +220,9 @@ shouldDoPayloadInstall() {
 		/tissot_manager/aroma 1 `basename $OUT_FD` /tissot_manager/tissot_manager.zip >/tmp/tissot_manager_prompt.log
 		ui_print
 		rm "/tmp/aroma_prompt.prop"
+		umount -f /system_new_slot
+		# Don't rm -rf here just in case the unmount failed
+		#rm -rf /system_new_slot
 		resumeTwrp
 		
 		if [ -f "/tmp/flash_confirm" ]; then

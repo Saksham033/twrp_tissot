@@ -266,7 +266,7 @@ if prop("choice_main_menu.prop","selected")=="2" then
 				# unrecognized or empty vendor partition map
 				alert(
 					"Unable to patch",
-					"Your vendor partition is empty or incompatible. If you're sure there is a working Vendor pack installed, please report this to CosmicDan.",
+					"Your vendor partition is empty or incompatible. If you're sure there is a working Vendor pack installed to the current slot, please report this to CosmicDan.",
 					"@warning"
 				);
 			else

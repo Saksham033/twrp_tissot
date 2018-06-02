@@ -1740,6 +1740,8 @@
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
 					<action function="set">tw_action2_param=
+						umount -f /system;
+						umount -f /vendor;
 						if [ -b "/dev/block/bootdevice/by-name/userdata_a" ]; then
 							umount -f /sdcard;
 							umount -f /data;
@@ -1770,7 +1772,10 @@
 					<action function="set">tw_action_param=B</action>
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
-					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then
+					<action function="set">tw_action2_param=
+						umount -f /system;
+						umount -f /vendor;
+						if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then
 							umount -f /sdcard;
 							umount -f /data;
 							mount /dev/block/bootdevice/by-name/userdata_b /data;
@@ -2891,7 +2896,10 @@
 					<action function="set">tw_action_param=A</action>
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
-					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_a" ]; then
+					<action function="set">tw_action2_param=
+						umount -f /system;
+						umount -f /vendor;
+						if [ -b "/dev/block/bootdevice/by-name/userdata_a" ]; then
 							umount -f /sdcard;
 							umount -f /data;
 							mount /dev/block/bootdevice/by-name/userdata_a /data;
@@ -2921,7 +2929,10 @@
 					<action function="set">tw_action_param=B</action>
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
-					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then
+					<action function="set">tw_action2_param=
+						umount -f /system;
+						umount -f /vendor;
+						if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then
 							umount -f /sdcard;
 							umount -f /data;
 							mount /dev/block/bootdevice/by-name/userdata_b /data;
