@@ -57,12 +57,7 @@ service sbinqseecomd /sbin/qseecomd
     group root
     seclabel u:r:recovery:s0
 
-# Tissot Manager launch (called by tissot_manager.sh rather than TWRP directly, since we need to fix perms and kill recovery first)
-service tissot_manager_launch /sbin/sh /sbin/tissot_manager_launch.sh
-    disabled
-    oneshot
-    seclabel u:r:recovery:s0
-
+# Needed for boot control
 service hwservicemanager /sbin/hwservicemanager
     user root
     group root
@@ -70,11 +65,13 @@ service hwservicemanager /sbin/hwservicemanager
     onrestart setprop hwservicemanager.ready false
     seclabel u:r:recovery:s0
 
+# Needed for boot control
 service boot-1-0 /sbin/android.hardware.boot@1.0-service
     user root
     group root
     seclabel u:r:recovery:s0
 
+# Needed for boot control
 service servicemanager /sbin/servicemanager
     disabled
     user root

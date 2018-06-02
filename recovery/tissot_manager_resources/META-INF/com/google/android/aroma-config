@@ -248,15 +248,19 @@ endif;
 ### Installation
 ###################
 
-ini_set("text_next", "Reboot TWRP");
-ini_set("icon_next", "@exit");
-setvar("retstatus",
-    install(
-        "Repartitioning",
-        "<b>"+ini_get("rom_name")+"</b> is performing the repartition.\n\n"+
-        "This may take a minute.",
-        "@chip",
-        ""
-    )
-);
+if prop("choice_main_menu.prop", "selected") == "1" then
+	ini_set("text_next", "Reboot TWRP");
+	ini_set("icon_next", "@exit");
+	setvar("retstatus",
+		install(
+			"Repartitioning",
+			"<b>"+ini_get("rom_name")+"</b> is performing the repartition.\n\n"+
+			"This may take a minute.",
+			"@chip",
+			""
+		)
+	);
+	write("/tmp/do_reboot_recovery", "");
+endif;
+
 exit("");

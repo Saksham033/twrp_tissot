@@ -3557,10 +3557,14 @@
 				<placement x="%center_x%" y="%row19_y%"/>
 				<text>{@tissot_manager=Tissot Manager}</text>
 				<actions>
-					<action function="set">tw_action=cmd</action>
-					<action function="set">tw_action_param=/sbin/sh /sbin/tissot_manager.sh</action>
-					<action function="set">tw_has_action2=0</action>
-					<action function="page">singleaction_page</action>
+					<action function="set">tw_back=advanced</action>
+					<action function="queueclear"/>
+					<action function="cmd">
+						echo "/tissot_manager/tissot_manager_launch.sh" > /tmp/flash_proxy_command
+					</action>
+					<action function="set">tw_filename=/tissot_manager/flash_proxy.zip</action>
+					<action function="queuezip"/>
+					<action function="flash">flash_zip</action>
 				</actions>
 			</button>
 
