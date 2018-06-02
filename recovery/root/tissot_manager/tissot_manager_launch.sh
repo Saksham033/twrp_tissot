@@ -8,10 +8,7 @@ OUT_FD=/proc/$$/fd/$2
 
 ui_print "[#] Starting Tissot Manager..."
 
-# pause TWRP
-for pid in `pidof recovery`; do 
-	kill -SIGSTOP $pid
-done;
+pauseTwrp
 
 # stop encryption service
 stop sbinqseecomd
@@ -28,7 +25,5 @@ fi
 # restart encryption
 start sbinqseecomd
 
-# resume TWRP
-for pid in `pidof recovery`; do 
-	kill -SIGCONT $pid
-done;
+resumeTwrp
+

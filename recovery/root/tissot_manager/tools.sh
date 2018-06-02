@@ -40,10 +40,10 @@ getBootSlotLetter() {
 }
 
 getOtherSlotLetter() {
-	if getCurrentSlotLetter="a"; then
-		echo "b"
+	if [ `getCurrentSlotLetter` = "a" ]; then
+		echo -n "b"
 	else
-		echo "a"
+		echo -n "a"
 	fi
 }
 
@@ -122,6 +122,11 @@ restoreTwrp() {
 	fi
 }
 
+vendorDualbootPatch() {
+	# TODO
+	ui_print "TODO"
+}
+
 userdataCalcUsageRemainingForSlotA() {
 	userdata_capacity=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata | awk '{ print $4 }'`
 	userdata_start=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata | awk '{ print $2 }'`
@@ -165,6 +170,23 @@ userdataCalcUsageRemainingForSlotA() {
 		echo -n "`dc $userdata_a_shrunk 1.2 - p`"
 	fi
 }
+
+pauseTwrp() {
+	for pid in `pidof recovery`; do 
+		kill -SIGSTOP $pid
+	done;
+}
+
+resumeTwrp() {
+	for pid in `pidof recovery`; do 
+		kill -SIGCONT $pid
+	done;
+}
+
+
+
+#################################
+# Entrypoints for Tissot Manager
 
 if [ "$1" == "userdata_calc" ]; then
 	userdataCalcUsageRemainingForSlotA "$@"

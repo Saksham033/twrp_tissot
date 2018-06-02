@@ -11,6 +11,8 @@ ui_print
 ui_print
 ui_print "--------------------------------------------------"
 ui_print
+# TODO: Slot install selection
+
 # TWRP survival
 backupTwrp
 ui_print
@@ -76,7 +78,7 @@ else
 	ui_print "[i] ROM install done to Slot `cat /tmp/target_slot`."
 	ui_print
 	if [ -f "/tmp/twrp_survival_success" ]; then
-		ui_print "[i] TWRP was re-installed automatically."
+		ui_print "[i] TWRP was automatically re-installed to the new slot."
 		ui_print
 	fi
 	ui_print "[i] Be sure to do the following now:"
