@@ -626,16 +626,16 @@
 			<slider>
 				<text>{@swipe_flash=Swipe to confirm Flash}</text>
 				<actions>
-					<action function="set">tw_back=flashimage_confirm</action>
-					<action function="set">tw_action=cmd</action>
-					<action function="set">tw_action_param=/tissot_manager/flash_image.sh %tw_filename% %tw_flash_partition%</action>
-					<action function="set">tw_has_action2=0</action>
-					<action function="set">tw_action_text1={@flashing_image=Flashing Image...}</action>
-					<action function="set">tw_action_text2=</action>
-					<action function="set">tw_complete_text1={@image_flashed=Image Flashed}</action>
-					<action function="page">action_page</action>
+					<action function="queueclear"/>
+					<action function="cmd">
+						echo "/tissot_manager/flash_image.sh" > /tmp/flash_proxy_command
+						echo "%tw_filename%" > /tmp/flash_image_source;
+						echo "%tw_flash_partition%" > /tmp/flash_image_target;
+					</action>
+					<action function="set">tw_filename=/tissot_manager/flash_proxy.zip</action>
+					<action function="queuezip"/>
+					<action function="flash">flash_zip</action>
 				</actions>
-				<action function="flashimage"/>
 			</slider>
 
 			<action>
