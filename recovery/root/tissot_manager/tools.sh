@@ -57,6 +57,16 @@ isTreble() {
 	fi
 }
 
+hasDualbootUserdata() {
+	if [ -b "/dev/block/bootdevice/by-name/userdata_a" -a -b "/dev/block/bootdevice/by-name/userdata_b" ]; then
+		# return 0 = true
+		return 0 
+	else
+		# return 1 = false
+		return 1
+	fi
+}
+
 isHotBoot() {
 	if cat /proc/cmdline | grep -Fqe " gpt "; then
 		# " gpt " in kernel cmdline = real boot
@@ -65,6 +75,63 @@ isHotBoot() {
 		# no " gpt " = fastboot hotboot
 		return 0
 	fi
+}
+
+# Checks if current slot vendor is dualboot patched or not.
+# returns:
+# "dualboot" for dualboot patched
+# "singleboot" for singleboot standard
+# "na" for error (missing or incompatible fstab)
+vendorDualbootCheck() {
+	echo "na" > /tmp/dualboot_check
+	umount -f /vendor > /dev/null 2>&1
+	mount /dev/block/bootdevice/by-name/vendor_`getCurrentSlotLetter` /vendor > /dev/null 2>&1
+	if [ -f "/vendor/etc/fstab.qcom" ]; then
+		# We want to loop over all matching lines because there could be multiple userdata mounts (e.g. for ext4 and f2fs ROM's)
+		cat "/vendor/etc/fstab.qcom" | grep "/dev/block/bootdevice/by-name/userdata" | while read -r LINE; do
+			if echo $LINE | grep -Fqe ",slotselect"; then
+				echo "dualboot" > /tmp/dualboot_check
+			else
+				echo "singleboot" > /tmp/dualboot_check
+			fi
+		done
+	fi
+	echo -n `cat /tmp/dualboot_check`
+	rm /tmp/dualboot_check
+}
+
+# Patches the current slot vendor for dualboot (or back)
+# returns:
+# "dualboot" for dualboot patch succeeded
+# "singleboot" for singleboot patch succeeded
+# "na" for error (missing or incompatible fstab)
+vendorDualbootPatch() {
+	echo "na" > /tmp/dualboot_patch
+	dualbootCheck=`vendorDualbootCheck`
+	rm "/tmp/fstab.qcom.new" > /dev/null 2>&1
+	if [ -f "/vendor/etc/fstab.qcom" -a "$dualbootCheck" != "na" ]; then
+		# loop over the existing fstab and create a new one, modifying as necessary. Simplest way to replace a string in specific matching line
+		{
+			IFS=''
+			cat "/vendor/etc/fstab.qcom" | while read LINE; do
+				if echo $LINE | grep -Fqe "/dev/block/bootdevice/by-name/userdata"; then
+					if [ "$dualbootCheck" = "dualboot" ]; then
+						LINE=`echo $LINE | sed 's|,slotselect||'`
+						echo "singleboot" > /tmp/dualboot_patch
+					elif [ "$dualbootCheck" = "singleboot" ]; then
+						LINE=`echo $LINE | sed 's|wait,|wait,slotselect,|'`
+						echo "dualboot" > /tmp/dualboot_patch
+					fi
+				fi
+				echo $LINE >> "/tmp/fstab.qcom.new"
+			done
+		}
+		mv -f "/tmp/fstab.qcom.new" "/vendor/etc/fstab.qcom"
+		chmod 0644 "/vendor/etc/fstab.qcom"
+	fi
+	echo -n `cat /tmp/dualboot_patch`
+	rm /tmp/dualboot_patch > /dev/null 2>&1
+	rm /tmp/fstab.qcom.new > /dev/null 2>&1
 }
 
 # internal
@@ -169,11 +236,6 @@ shouldDoPayloadInstall() {
 	fi
 }
 
-vendorDualbootPatch() {
-	# TODO
-	ui_print "TODO"
-}
-
 userdataCalcUsageRemainingForSlotA() {
 	userdata_capacity=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata | awk '{ print $4 }'`
 	userdata_start=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata | awk '{ print $2 }'`
@@ -237,4 +299,10 @@ resumeTwrp() {
 
 if [ "$1" == "userdata_calc" ]; then
 	userdataCalcUsageRemainingForSlotA "$@"
+elif [ "$1" == "vendorDualbootCheck" ]; then
+	vendorDualbootCheck
+elif [ "$1" == "vendorDualbootPatch" ]; then
+	vendorDualbootPatch
+elif [ "$1" == "hasDualbootUserdata" ]; then
+	hasDualbootUserdata
 fi

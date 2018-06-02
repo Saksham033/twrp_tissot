@@ -104,6 +104,7 @@ menubox(
     "@home",
     "choice_main_menu.prop",
     "Repartition",				getvar("repartition_subtext"),						"@chip",
+	"Patches",					"Various device patches",							"@patches",
     "Changelog",				"View changelog for this version",					"@changelog",
 	"Credits",					"See thanks and credits",							"@credits",
     "Exit",						"Exit and return to Recovery",						"@exit"
@@ -140,7 +141,7 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 		);
 		
 		if prop("choice_repartition.prop","root") == "treble_userdata" then
-			pleasewait("Calculating dualboot options...");
+			pleasewait("Calculating dual boot options...");
 			# gather size variables. We need to use exec_buffer on these calls for some reason.
 			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "4gb");
 			setvar("userdata_remaining_4gb", getvar("exec_buffer"));
@@ -154,21 +155,21 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 			setvar("userdata_remaining_16gb", getvar("exec_buffer"));
 			
 			form(
-				"Dualboot",
-				"Shrinking userdata allows dualboot by splitting userdata into two slots. Select your choice.",
+				"Dual boot",
+				"Shrinking userdata allows dual boot by splitting userdata into two slots. Select your choice.",
 				"@chip",
 				"choice_dualboot.prop",
-				"none",		"Single-boot",							"Keep single-boot only",														"select.selected",
-				"4gb",   	"Dualboot, 4GB for Slot B",				"Dualboot with 4GB for userdata_b. For your device, this leaves about " +
-																	  getvar("userdata_remaining_4gb") + "GB for userdata_a.",						"select",
-				"6gb",   	"Dualboot, 6GB for Slot B",				"Dualboot with 6GB for userdata_b. For your device, this leaves about " +
-																	  getvar("userdata_remaining_6gb") + "GB for userdata_a.",						"select",
-				"8gb",   	"Dualboot, 8GB for Slot B",				"Dualboot with 8GB for userdata_b. For your device, this leaves about " +
-																	  getvar("userdata_remaining_8gb") + "GB for userdata_a.",						"select",
-				"12gb",   	"Dualboot, 12GB for Slot B",			"Dualboot with 12GB for userdata_b. For your device, this leaves about " +
-																	  getvar("userdata_remaining_12gb") + "GB for userdata_a.",						"select",
-				"16gb",   	"Dualboot, 16GB for Slot B",			"Dualboot with 16GB for userdata_b. For your device, this leaves about " +
-																	  getvar("userdata_remaining_16gb") + "GB for userdata_a.",						"select"
+				"none",		"Singleboot",							"Keep single-boot only",														"select.selected",
+				"4gb",   	"Dual boot, 4GB for Slot B",			"Dual boot with 4GB for userdata_b. For your device, this leaves about " +
+																		getvar("userdata_remaining_4gb") + "GB for userdata_a.",						"select",
+				"6gb",   	"Dual boot, 6GB for Slot B",			"Dual boot with 6GB for userdata_b. For your device, this leaves about " +
+																		getvar("userdata_remaining_6gb") + "GB for userdata_a.",						"select",
+				"8gb",   	"Dual boot, 8GB for Slot B",			"Dual boot with 8GB for userdata_b. For your device, this leaves about " +
+																		getvar("userdata_remaining_8gb") + "GB for userdata_a.",						"select",
+				"12gb",   	"Dual boot, 12GB for Slot B",			"Dual boot with 12GB for userdata_b. For your device, this leaves about " +
+																		getvar("userdata_remaining_12gb") + "GB for userdata_a.",						"select",
+				"16gb",   	"Dual boot, 16GB for Slot B",			"Dual boot with 16GB for userdata_b. For your device, this leaves about " +
+																		getvar("userdata_remaining_16gb") + "GB for userdata_a.",						"select"
 			);
 		endif;
 		
@@ -178,9 +179,9 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 		if prop("choice_repartition.prop","root") == "treble_userdata" then
 			setvar("partition_firstline", "This will shrink Userdata by 1.2GB, adding vendor partitions (one for each slot) and allow flashing a Treble ROM.");
 			if prop("choice_dualboot.prop","root") == "none" then
-				setvar("partition_secondline", "You have opted for no dualboot.");
+				setvar("partition_secondline", "You have opted for no dual boot.");
 			else
-				setvar("partition_secondline", "You have opted for dualboot option '" + prop("choice_dualboot.prop","root") + "' to split userdata between both slots.");
+				setvar("partition_secondline", "You have opted for dual boot option '" + prop("choice_dualboot.prop","root") + "' to split userdata between both slots.");
 			endif;
 			setvar("partition_wipe_label", "your USERDATA, including INTERNAL STORAGE, so make sure you have backed up anything you want to keep!");
 		else
@@ -226,10 +227,74 @@ endif;
 
 
 ###################
-### Changelog and Credits
+### Patches
 ###################
 
 if prop("choice_main_menu.prop","selected")=="2" then
+	gotolabel("patches");
+	pleasewait("Detecting existing patch status...");
+	
+	# dualboot status and text
+	setvar("hasDualbootUserdata", exec("/sbin/sh", "/tissot_manager/tools.sh", "hasDualbootUserdata"));
+	exec("/sbin/sh", "/tissot_manager/tools.sh", "vendorDualbootCheck");
+	setvar("vendorDualbootCheck", getvar("exec_buffer"));
+	setvar("dualboot_subtext", "Current vendor is empty or incompatible, cannot patch.");
+	if getvar("vendorDualbootCheck")=="singleboot" then
+		setvar("dualboot_subtext", "Patch current slot vendor for <#00c>dual boot</#> support.");
+	endif;
+	if getvar("vendorDualbootCheck")=="dualboot" then
+		setvar("dualboot_subtext", "Revert current slot vendor dual boot back to <#c00>single boot</#> only.");
+	endif;
+	if getvar("hasDualbootUserdata")==1 then
+		setvar("dualboot_subtext", "Unavailable - Userdata is not partitioned for dual boot.");
+	endif;
+	
+	# done building info, show menu
+	menubox(
+		"Patches",
+		"Select your choice.",
+		"@patches",
+		"choice_patches.prop",
+		"Dual boot patch",			getvar("dualboot_subtext"),						"@dualboot",
+		"Back",						"Return to main menu",							"@home"
+	);
+	
+	if prop("choice_patches.prop","selected")=="1" then
+		if getvar("hasDualbootUserdata")==0 then
+			# has userdata_a and _b
+			if getvar("vendorDualbootCheck")=="na" then
+				# unrecognized or empty vendor partition map
+				alert(
+					"Unable to patch",
+					"Your vendor partition is empty or incompatible. If you're sure there is a working Vendor pack installed, please report this to CosmicDan.",
+					"@warning"
+				);
+			else
+				# run patch
+				pleasewait("Patching...");
+				exec("/sbin/sh", "/tissot_manager/tools.sh", "vendorDualbootPatch");
+			endif;
+		else
+			# no userdata_a and _b
+			alert(
+				"Unable to patch",
+				"You have not partitioned for userdata_a and userdata_b. Please repartition your device to split userdata for dual boot.",
+				"@warning"
+			);
+		endif;
+		goto("patches");
+	endif;
+	
+	goto("start");
+endif;
+
+
+
+###################
+### Changelog and Credits
+###################
+
+if prop("choice_main_menu.prop","selected")=="3" then
     ini_set("text_next", "Return  ");
     ini_set("icon_next", "@home");
     textbox(
@@ -241,7 +306,7 @@ if prop("choice_main_menu.prop","selected")=="2" then
     goto("start");
 endif;
 
-if prop("choice_main_menu.prop","selected")=="3" then
+if prop("choice_main_menu.prop","selected")=="4" then
     ini_set("text_next", "Return  ");
     ini_set("icon_next", "@home");
     textbox(
@@ -259,7 +324,7 @@ endif;
 ### Exit
 ###################
 
-if prop("choice_main_menu.prop","selected")=="4" then
+if prop("choice_main_menu.prop","selected")=="5" then
     exit("");
 endif;
 
