@@ -29,6 +29,10 @@ targetBlock=
 targetType=
 isFilesystem=false
 
+# TWRP survival for boot images
+if [ "$targetMount" = "/boot" ]; then
+	backupTwrp
+fi
 
 # look for mount point and type from recovery.fstab
 while read LINE; do
@@ -81,6 +85,11 @@ else
 	ui_print "    [#] Flashing via dd..."
 	dd if=$sourceFile of=$targetBlock
 	result=$?
+fi
+
+# TWRP survival for boot images
+if [ "$targetMount" = "/boot" ]; then
+	restoreTwrp `getCurrentSlotLetter`
 fi
 
 # cleanup
