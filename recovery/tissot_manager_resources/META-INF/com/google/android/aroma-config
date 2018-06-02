@@ -6,6 +6,27 @@ theme("miui");
 fontresload( "0", "ttf/Roboto-Regular.ttf", "12" );
 fontresload( "1", "ttf/Roboto-Regular.ttf", "14" );
 
+# custom UI prompts
+if file_getprop("/tmp/aroma_prompt.prop", "task") == "flash_slot_prompt" then
+	ini_set("text_next", "OK");
+	setvar("id", file_getprop("/tmp/aroma_prompt.prop", "id"));
+	setvar("slot", file_getprop("/tmp/aroma_prompt.prop", "slot"));
+	form(
+		"Confirm ZIP install",
+		"You are about to install a ROM into Slot " + getvar("slot") + ". Please confirm.",
+		"@chip",
+		"aroma_prompt_result.prop",
+		"confirm",	"Confirm",		"Confirm flashing to Slot " + getvar("slot") + ", overwriting ROM with ID '" +
+										"<b>" + getvar("id") + "</b>'.",												"select.selected",
+		"cancel",   "Cancel",		"Cancel installation and return to TWRP.",											"select"
+	);
+	if prop("aroma_prompt_result.prop","root") == "confirm" then
+		write("/tmp/flash_confirm", "");
+	endif;
+	exit("");
+endif;
+
+
 # set device from ro.product.device prop, abort if not possible
 setvar("device", sysprop("ro.product.device"));
 if (!getvar("device") == "tissot" ) then

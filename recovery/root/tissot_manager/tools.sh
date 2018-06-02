@@ -122,6 +122,53 @@ restoreTwrp() {
 	fi
 }
 
+shouldDoPayloadInstall() {
+	targetSlot=`getOtherSlotLetter`
+	if [ ! -d /system_new_slot ]; then
+		mkdir /system_new_slot
+	fi
+	chmod 777 /system_new_slot
+	mount -o ro /dev/block/bootdevice/by-name/system_$targetSlot /system_new_slot
+	if [ -f "/system_new_slot/system/build.prop" ]; then
+		# don't bother with any of this if it's an empty slot
+		targetSlotId=`cat "/system_new_slot/system/build.prop" | grep -i "ro.build.display.id=" | sed 's|ro\.build\.display\.id=||'`
+		if [ "$targetSlotId" != "" ]; then
+			echo "id=$targetSlotId" > /tmp/aroma_prompt.prop
+		else
+			echo "id=Unknown [no ro.build.display.id prop found]" > /tmp/aroma_prompt.prop
+		fi
+		if [ "$targetSlot" = "a" ]; then
+			echo "slot=A" >> /tmp/aroma_prompt.prop
+		else
+			echo "slot=B" >> /tmp/aroma_prompt.prop
+		fi
+		
+		# Do aroma prompt. It should touch /tmp/flash_confirm if the user agreed to install.
+		# It can get the build ID and slot from /tmp/aroma_prompt.prop "id" and "slot" props respectively.
+		pauseTwrp
+		echo "task=flash_slot_prompt" >> /tmp/aroma_prompt.prop
+		ui_print
+		/tissot_manager/aroma 1 `basename $OUT_FD` /tissot_manager/tissot_manager.zip >/tmp/tissot_manager_prompt.log
+		ui_print
+		rm "/tmp/aroma_prompt.prop"
+		resumeTwrp
+		
+		if [ -f "/tmp/flash_confirm" ]; then
+			# return true
+			rm "/tmp/flash_confirm"
+			return 0
+		else
+			ui_print "[!] Install aborted by user choice."
+			# return false
+			return 1
+		fi
+	else
+		ui_print "    [i] Slot $targetSlot appears to be empty"
+		# return true
+		return 0
+	fi
+}
+
 vendorDualbootPatch() {
 	# TODO
 	ui_print "TODO"

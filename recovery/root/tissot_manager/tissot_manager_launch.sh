@@ -13,7 +13,7 @@ pauseTwrp
 # stop encryption service
 stop sbinqseecomd
 
-/tissot_manager/aroma 1 $2 /tissot_manager/tissot_manager.zip >/tmp/tissot_manager.txt
+/tissot_manager/aroma 1 $2 /tissot_manager/tissot_manager.zip >/tmp/tissot_manager.log
 if [ -f "/tissot_manager/tissot_manager.zip.log.txt" ]; then
 	cp -f "/tissot_manager/tissot_manager.zip.log.txt" "/sdcard1/tissot_manager.log"
 fi

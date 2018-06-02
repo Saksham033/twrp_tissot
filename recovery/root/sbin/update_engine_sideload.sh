@@ -11,7 +11,12 @@ ui_print
 ui_print
 ui_print "--------------------------------------------------"
 ui_print
-# TODO: Slot install selection
+
+# Confirm for payload install to new slot
+ui_print "[#] Checking target slot..."
+if ! shouldDoPayloadInstall; then
+	exit 0
+fi
 
 # TWRP survival
 backupTwrp
@@ -76,21 +81,26 @@ else
 	# TWRP survival
 	restoreTwrp $otherSlot
 	ui_print "[i] ROM install done to Slot `cat /tmp/target_slot`."
+	rm /tmp/target_slot
 	ui_print
 	if [ -f "/tmp/twrp_survival_success" ]; then
+		rm "/tmp/twrp_survival_success"
 		ui_print "[i] TWRP was automatically re-installed to the new slot."
 		ui_print
-	fi
-	ui_print "[i] Be sure to do the following now:"
-	if [ ! -f "/tmp/twrp_survival_success" ]; then
-		ui_print "    - Flash TWRP immediately;"
+		ui_print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+		ui_print
+		ui_print "[!] Ensure you Reboot Recovery NOW to switch to the"
+		ui_print "    new Slot before flashing anything else!"
+		ui_print
+		ui_print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+		ui_print
 	else
-		rm "/tmp/twrp_survival_success"
+		ui_print "[i] Be sure to do the following now:"
+		ui_print "    - Flash TWRP immediately;"
+		ui_print "    - Reboot Recovery to switch to the new slot;"
+		ui_print "    - Install any other ZIPs you desire (e.g. Gapps, Magisk, etc);"
 	fi
-	ui_print "    - Reboot Recovery to switch to the new slot;"
-	ui_print "    - Install any other ZIPs you desire (e.g. Gapps, Magisk, etc);"
 fi
-rm /tmp/target_slot
 ui_print
 ui_print "--------------------------------------------------"
 ui_print
