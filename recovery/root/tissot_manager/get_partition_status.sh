@@ -84,15 +84,24 @@ elif [ ! -b "$vendor_b_blockdev" ]; then
 fi
 
 # Get userdata info
-userdata_partline=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata`
+if [ -b "$userdata_b_blockdev" ]; then
+	userdata_partline=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata_a`
+else
+	userdata_partline=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata`
+fi
 userdata_partnum_current=$(echo "$userdata_partline" | awk '{ print $1 }')
 userdata_partstart_current=$(echo "$userdata_partline" | awk '{ print $2 }')
 #userdata_partend_current=$(echo "$userdata_partline" | awk '{ print $3 }')
 userdata_partname=$(echo "$userdata_partline" | awk '{ print $7 }')
 if [ "$userdata_partnum_current" == "$userdata_partnum" ]; then
-	if [ "$userdata_partname" == "userdata" ]; then
+	if [ "$userdata_partname" == "userdata" -o "$userdata_partname" == "userdata_a" ]; then
 		if [ "$userdata_partstart_current" == "$userdata_treble_partstart" ]; then
-			userdata_status=treble
+			# check for dualboot
+			if [ -b "$userdata_b_blockdev" ]; then
+				userdata_status=dualboot
+			else
+				userdata_status=treble
+			fi
 		elif [ "$userdata_partstart_current" == "$userdata_stock_partstart" ]; then
 			userdata_status=stock
 		fi
@@ -100,12 +109,11 @@ if [ "$userdata_partnum_current" == "$userdata_partnum" ]; then
 fi
 
 ######################
-#system_a_status=invalid
-#vendor_a_status=invalid
-#system_b_status=invalid
-#vendor_b_status=invalid
-#userdata_status=invalid
-
+#echo "$system_a_status"
+#echo "$vendor_a_status"
+#echo "$system_b_status"
+#echo "$vendor_b_status"
+#echo "$userdata_status"
 
 # if any status is invalid, return 0
 if [ "$system_a_status" == "invalid" -o "$vendor_a_status" == "invalid" -o "$system_b_status" == "invalid" -o "$vendor_b_status" == "invalid" -o "$userdata_status" == "invalid" ]; then
@@ -125,6 +133,11 @@ fi
 # check if we have a shrunk-userdata Treble map
 if [ "$system_a_status" == "stock" -a "$vendor_a_status" == "treble_before_userdata" -a "$system_b_status" == "stock" -a "$vendor_b_status" == "treble_before_userdata" -a "$userdata_status" == "treble" ]; then
 	exit 3
+fi
+
+# check if we have a dualboot-userdata Treble map
+if [ "$system_a_status" == "stock" -a "$vendor_a_status" == "treble_before_userdata" -a "$system_b_status" == "stock" -a "$vendor_b_status" == "treble_before_userdata" -a "$userdata_status" == "dualboot" ]; then
+	exit 4
 fi
 
 # nothing else matched, so return 0

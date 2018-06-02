@@ -122,3 +122,50 @@ restoreTwrp() {
 	fi
 }
 
+userdataCalcUsageRemainingForSlotA() {
+	userdata_capacity=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata | awk '{ print $4 }'`
+	userdata_start=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata | awk '{ print $2 }'`
+	userdata_end=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata | awk '{ print $3 }'`
+	userdata_length=`echo $((userdata_end-userdata_start))`
+	if [ "$2" == "4gb" ]; then
+		if [ "$3" == "as_sectors" ]; then
+			userdata_a_shrunk=`dc $userdata_length 8388608 - p`
+		else
+			userdata_a_shrunk=`dc $userdata_capacity 4 - p`
+		fi
+	elif [ "$2" == "6gb" ]; then
+		if [ "$3" == "as_sectors" ]; then
+			userdata_a_shrunk=`dc $userdata_length 12582912 - p`
+		else
+			userdata_a_shrunk=`dc $userdata_capacity 6 - p`
+		fi
+	elif [ "$2" == "8gb" ]; then
+		if [ "$3" == "as_sectors" ]; then
+			userdata_a_shrunk=`dc $userdata_length 16777216 - p`
+		else
+			userdata_a_shrunk=`dc $userdata_capacity 8 - p`
+		fi
+	elif [ "$2" == "12gb" ]; then
+		if [ "$3" == "as_sectors" ]; then
+			userdata_a_shrunk=`dc $userdata_length 25165824 - p`
+		else
+			userdata_a_shrunk=`dc $userdata_capacity 12 - p`
+		fi
+	elif [ "$2" == "16gb" ]; then
+		if [ "$3" == "as_sectors" ]; then
+			userdata_a_shrunk=`dc $userdata_length 33554432 - p`
+		else
+			userdata_a_shrunk=`dc $userdata_capacity 16 - p`
+		fi
+	fi
+	# subtract vendor_a and vendor_b
+	if [ "$3" == "as_sectors" ]; then
+		echo -n $((userdata_a_shrunk-2457600))
+	else
+		echo -n "`dc $userdata_a_shrunk 1.2 - p`"
+	fi
+}
+
+if [ "$1" == "userdata_calc" ]; then
+	userdataCalcUsageRemainingForSlotA "$@"
+fi

@@ -29,7 +29,7 @@ ziptotmp("credits.txt", "credits.txt");
 
 # set common variables
 ini_set("rom_name",             file_getprop("/tmp/aroma/version.prop","name"));
-ini_set("rom_version",          file_getprop("/tmp/aroma/version.prop","version"));
+#ini_set("rom_version",          file_getprop("/tmp/aroma/version.prop","version"));
 ini_set("rom_author",           "CosmicDan (see Credits for more)");
 ini_set("rom_device",           getvar("device"));
 
@@ -71,9 +71,13 @@ if (getvar("partition_status") == 3) then
 	setvar("partition_status_text", "Treble (Shrunk Userdata)");
 	setvar("repartition_subtext", "Restore stock partition map");
 endif;
+if (getvar("partition_status") == 4) then
+	setvar("partition_status_text", "Treble (Shrunk/Split Userdata)");
+	setvar("repartition_subtext", "Restore stock partition map");
+endif;
 
 menubox(
-    "Welcome to " + ini_get("rom_name") + " v" + ini_get("rom_version") + "!",
+    "Welcome to " + ini_get("rom_name") + "!",
     "Detected Device: <b>" + getvar("device") + "</b>\n" +
 	"Detected partition map: " + getvar("partition_status_text"),
     "@home",
@@ -109,15 +113,54 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 			"@chip",
 			"choice_repartition.prop",
 			"treble_userdata",		"Shrink Userdata",			"Shrink Userdata by 1.2GB. Maintains compatibility with non-Treble ROMs. " +
-																"<#c00>This will wipe Userdata and Internal Storage!</#>",									"select.selected",
+																"<#c00>This will wipe Userdata and Internal Storage!</#>",										"select.selected",
 			"treble_system",    	"Shrink System(s)",			"Shrink each System by 600MB. " + 
 																"<#c00>You will be unable to flash any non-Treble ROM! Also wipes existing System slots.</#>",	"select"
 		);
 		
+		if prop("choice_repartition.prop","root") == "treble_userdata" then
+			pleasewait("Calculating dualboot options...");
+			# gather size variables. We need to use exec_buffer on these calls for some reason.
+			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "4gb");
+			setvar("userdata_remaining_4gb", getvar("exec_buffer"));
+			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "6gb");
+			setvar("userdata_remaining_6gb", getvar("exec_buffer"));
+			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "8gb");
+			setvar("userdata_remaining_8gb", getvar("exec_buffer"));
+			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "12gb");
+			setvar("userdata_remaining_12gb", getvar("exec_buffer"));
+			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "16gb");
+			setvar("userdata_remaining_16gb", getvar("exec_buffer"));
+			
+			form(
+				"Dualboot",
+				"Shrinking userdata allows dualboot by splitting userdata into two slots. Select your choice.",
+				"@chip",
+				"choice_dualboot.prop",
+				"none",		"Single-boot",							"Keep single-boot only",														"select.selected",
+				"4gb",   	"Dualboot, 4GB for Slot B",				"Dualboot with 4GB for userdata_b. For your device, this leaves about " +
+																	  getvar("userdata_remaining_4gb") + "GB for userdata_a.",						"select",
+				"6gb",   	"Dualboot, 6GB for Slot B",				"Dualboot with 6GB for userdata_b. For your device, this leaves about " +
+																	  getvar("userdata_remaining_6gb") + "GB for userdata_a.",						"select",
+				"8gb",   	"Dualboot, 8GB for Slot B",				"Dualboot with 8GB for userdata_b. For your device, this leaves about " +
+																	  getvar("userdata_remaining_8gb") + "GB for userdata_a.",						"select",
+				"12gb",   	"Dualboot, 12GB for Slot B",			"Dualboot with 12GB for userdata_b. For your device, this leaves about " +
+																	  getvar("userdata_remaining_12gb") + "GB for userdata_a.",						"select",
+				"16gb",   	"Dualboot, 16GB for Slot B",			"Dualboot with 16GB for userdata_b. For your device, this leaves about " +
+																	  getvar("userdata_remaining_16gb") + "GB for userdata_a.",						"select"
+			);
+		endif;
+		
 		setvar("partition_subtitle", "You are about to repartition for Treble support.");
+		setvar("partition_secondline", "");
 		
 		if prop("choice_repartition.prop","root") == "treble_userdata" then
 			setvar("partition_firstline", "This will shrink Userdata by 1.2GB, adding vendor partitions (one for each slot) and allow flashing a Treble ROM.");
+			if prop("choice_dualboot.prop","root") == "none" then
+				setvar("partition_secondline", "You have opted for no dualboot.");
+			else
+				setvar("partition_secondline", "You have opted for dualboot option '" + prop("choice_dualboot.prop","root") + "' to split userdata between both slots.");
+			endif;
 			setvar("partition_wipe_label", "your USERDATA, including INTERNAL STORAGE, so make sure you have backed up anything you want to keep!");
 		else
 			setvar("partition_firstline", "This will shrink each system slot by 600MB, adding vendor partitions (one for each slot) and allow flashing a Treble ROM.\n\n" +
@@ -132,7 +175,9 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 		if (getvar("partition_status") == 2) then
 			setvar("partition_wipe_label", "both SYSTEM slots, requiring you to install a new ROM or restore from a TWRP backup!");
 		endif;
-		
+		if (getvar("partition_status") == 4) then
+			setvar("partition_wipe_label", "your USERDATA for BOTH SLOTS, including INTERNAL STORAGE, so make sure you have backed up anything you want to keep!");
+		endif;
 	endif;
 	
 	
@@ -145,6 +190,7 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 		getvar("partition_subtitle"),
 		"@warning",
 		"\n\n" + getvar("partition_firstline") + "\n\n" + 
+		getvar("partition_secondline") + "\n\n" + 
 		"<#c00><b>This will COMPLETELY WIPE " + getvar("partition_wipe_label") + "</b></#>\n\n\n" +
 		"Please check the box below to confirm.",
 		"I wish to repartition this device",
@@ -167,7 +213,7 @@ if prop("choice_main_menu.prop","selected")=="2" then
     ini_set("icon_next", "@home");
     textbox(
         "Changelog",
-        "Changelog up to current version (" + ini_get("rom_version") + ")",
+        "Changelog up to this version",
         "@changelog",
         read("/tmp/aroma/changelog.txt")
     );

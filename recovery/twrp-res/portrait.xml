@@ -1739,7 +1739,18 @@
 					<action function="set">tw_action_param=A</action>
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
-					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_a" ]; then umount -f /sdcard; umount -f /data; mount /dev/block/bootdevice/by-name/userdata_a /data; mount -o bind /data/media /sdcard; fi</action>
+					<action function="set">tw_action2_param=
+						if [ -b "/dev/block/bootdevice/by-name/userdata_a" ]; then
+							umount -f /sdcard;
+							umount -f /data;
+							mount /dev/block/bootdevice/by-name/userdata_a /data;
+							if [ ! -d /data/media ]; then
+								mkdir /data/media
+								chmod 0770 /data/media
+							fi;
+							mount -o bind /data/media /sdcard;
+						fi
+					</action>
 					<action function="set">tw_action_text1={@changing_boot_slot=Changing Boot Slot}</action>
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>
@@ -1759,7 +1770,17 @@
 					<action function="set">tw_action_param=B</action>
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
-					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then umount -f /sdcard; umount -f /data; mount /dev/block/bootdevice/by-name/userdata_b /data; mount -o bind /data/media /sdcard; fi</action>
+					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then
+							umount -f /sdcard;
+							umount -f /data;
+							mount /dev/block/bootdevice/by-name/userdata_b /data;
+							if [ ! -d /data/media ]; then
+								mkdir /data/media
+								chmod 0770 /data/media
+							fi;
+							mount -o bind /data/media /sdcard;
+						fi
+					</action>
 					<action function="set">tw_action_text1={@changing_boot_slot=Changing Boot Slot}</action>
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>
@@ -2870,7 +2891,17 @@
 					<action function="set">tw_action_param=A</action>
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
-					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_a" ]; then umount -f /sdcard; umount -f /data; mount /dev/block/bootdevice/by-name/userdata_a /data; mount -o bind /data/media /sdcard; fi</action>
+					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_a" ]; then
+							umount -f /sdcard;
+							umount -f /data;
+							mount /dev/block/bootdevice/by-name/userdata_a /data;
+							if [ ! -d /data/media ]; then
+								mkdir /data/media
+								chmod 0770 /data/media
+							fi;
+							mount -o bind /data/media /sdcard;
+						fi
+					</action>
 					<action function="set">tw_action_text1={@changing_boot_slot=Changing Boot Slot}</action>
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>
@@ -2890,7 +2921,17 @@
 					<action function="set">tw_action_param=B</action>
 					<action function="set">tw_has_action2=1</action>
 					<action function="set">tw_action2=cmd</action>
-					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then umount -f /sdcard; umount -f /data; mount /dev/block/bootdevice/by-name/userdata_b /data; mount -o bind /data/media /sdcard; fi</action>
+					<action function="set">tw_action2_param=if [ -b "/dev/block/bootdevice/by-name/userdata_b" ]; then
+							umount -f /sdcard;
+							umount -f /data;
+							mount /dev/block/bootdevice/by-name/userdata_b /data;
+							if [ ! -d /data/media ]; then
+								mkdir /data/media
+								chmod 0770 /data/media
+							fi;
+							mount -o bind /data/media /sdcard;
+						fi
+					</action>
 					<action function="set">tw_action_text1={@changing_boot_slot=Changing Boot Slot}</action>
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>

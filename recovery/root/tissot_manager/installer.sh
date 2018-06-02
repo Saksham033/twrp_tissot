@@ -30,9 +30,12 @@ abort() { ui_print "$*"; umount /system; umount /data; exit 1; }
 
 ui_print " ";
 ui_print "[#] Unmounting all eMMC partitions..."
+stop sbinqseecomd
+sleep 2
 mount | grep /dev/block/mmcblk0p | while read -r line ; do
 	thispart=`echo "$line" | awk '{ print $3 }'`
 	umount -f $thispart
+	sleep 0.5
 done
 sleep 2
 blockdev --rereadpt /dev/block/mmcblk0
@@ -65,18 +68,40 @@ if [ "$choice" == "stock" ]; then
 		make_ext4fs /dev/block/mmcblk0p$system_a_partnum
 		make_ext4fs /dev/block/mmcblk0p$system_b_partnum
 	else
-		# userdata is shrunk
-		# get userdata end sector
-		userdata_partline=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata`
+		# userdata is shrunk or split
+		if [ "$partition_status" == "4" ]; then
+			# dualboot userdata
+			userdata_partline=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata_a`
+		else
+			userdata_partline=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata`
+		fi
 		userdata_partnum_current=$(echo "$userdata_partline" | awk '{ print $1 }')
 		userdata_partstart_current=$(echo "$userdata_partline" | awk '{ print $2 }')
 		userdata_partend_current=$(echo "$userdata_partline" | awk '{ print $3 }')
-		userdata_partname=$(echo "$userdata_partline" | awk '{ print $7 }')
+		#userdata_partname=$(echo "$userdata_partline" | awk '{ print $7 }')
+		if [ "$partition_status" == "4" ]; then
+			userdata_b_partline=`sgdisk --print /dev/block/mmcblk0 | grep -i userdata_b`
+			userdata_b_partnum_current=$(echo "$userdata_b_partline" | awk '{ print $1 }')
+			userdata_b_partstart_current=$(echo "$userdata_b_partline" | awk '{ print $2 }')
+			userdata_b_partend_current=$(echo "$userdata_b_partline" | awk '{ print $3 }')
+			#userdata_b_partname=$(echo "$userdata_b_partline" | awk '{ print $7 }')
+		fi
 		# safety check
-		if [ "$userdata_partnum_current" == "$userdata_partnum" -a "$userdata_partname" == "userdata" -a "$userdata_partstart_current" == "$userdata_treble_partstart" ]; then
+		if [ "$userdata_partnum_current" == "$userdata_partnum" -a "$userdata_partstart_current" == "$userdata_treble_partstart" ]; then
+			if [ "$partition_status" == "4" ]; then
+				ui_print "[#] Deleting userdata_b..."
+				sgdisk /dev/block/mmcblk0 --delete $userdata_b_partnum_current
+				sleep 2
+				blockdev --rereadpt /dev/block/mmcblk0
+				sleep 1
+			fi
 			ui_print "[#] Growing userdata..."
 			sgdisk /dev/block/mmcblk0 --delete $userdata_partnum
-			sgdisk /dev/block/mmcblk0 --new=$userdata_partnum:$userdata_stock_partstart:$userdata_partend_current
+			if [ "$partition_status" == "4" ]; then
+				sgdisk /dev/block/mmcblk0 --new=$userdata_partnum:$userdata_stock_partstart:$userdata_b_partend_current
+			else
+				sgdisk /dev/block/mmcblk0 --new=$userdata_partnum:$userdata_stock_partstart:$userdata_partend_current
+			fi
 			sgdisk /dev/block/mmcblk0 --change-name=$userdata_partnum:userdata
 			ui_print "[#] Formatting userdata..."
 			sleep 2
@@ -103,25 +128,54 @@ elif [ "$choice" == "treble_userdata" ]; then
 	userdata_partstart_current=$(echo "$userdata_partline" | awk '{ print $2 }')
 	userdata_partend_current=$(echo "$userdata_partline" | awk '{ print $3 }')
 	#userdata_partname=$(echo "$userdata_partline" | awk '{ print $7 }')
-	ui_print "[#] Shrinking userdata..."
-	sgdisk /dev/block/mmcblk0 --delete $userdata_partnum_current
-	sgdisk /dev/block/mmcblk0 --new=$userdata_partnum_current:$userdata_treble_partstart:$userdata_partend_current
-	sgdisk /dev/block/mmcblk0 --change-name=$userdata_partnum_current:userdata
+	dualboot_option=`file_getprop /tmp/aroma/choice_dualboot.prop root`
+	if [ "$dualboot_option" == "none" ]; then
+		ui_print "[#] Shrinking userdata..."
+		sgdisk /dev/block/mmcblk0 --delete $userdata_partnum_current
+		sgdisk /dev/block/mmcblk0 --new=$userdata_partnum_current:$userdata_treble_partstart:$userdata_partend_current
+		sgdisk /dev/block/mmcblk0 --change-name=$userdata_partnum_current:userdata
+	else
+		ui_print "[#] Shrinking and splitting userdata with $dualboot_option Slot B size..."
+		# instead of using pre-defined values, we calculate the userdata_a end and userdata_b start boundary dynamically
+		userdata_a_length=`/tissot_manager/tools.sh userdata_calc "$dualboot_option" "as_sectors"`
+		userdata_a_partstart=$userdata_treble_partstart
+		userdata_a_partend=`echo $(($userdata_treble_partstart+userdata_a_length-2))`
+		userdata_b_partstart=`echo $((userdata_a_partend+4))`
+		userdata_b_partend=$userdata_partend_current
+		sgdisk /dev/block/mmcblk0 --delete $userdata_partnum_current
+		sgdisk /dev/block/mmcblk0 --new=$userdata_partnum:$userdata_a_partstart:$userdata_a_partend
+		sgdisk /dev/block/mmcblk0 --change-name=$userdata_partnum:userdata_a
+		sgdisk /dev/block/mmcblk0 --new=$userdata_b_partnum:$userdata_b_partstart:$userdata_b_partend
+		sgdisk /dev/block/mmcblk0 --change-name=$userdata_b_partnum:userdata_b
+	fi
 	ui_print "[#] Creating vendor_a..."
 	sgdisk /dev/block/mmcblk0 --new=$vendor_a_partnum:$vendor_a_partstart_userdata:$vendor_a_partend_userdata
 	sgdisk /dev/block/mmcblk0 --change-name=$vendor_a_partnum:vendor_a
 	ui_print "[#] Creating vendor_b..."
 	sgdisk /dev/block/mmcblk0 --new=$vendor_b_partnum:$vendor_b_partstart_userdata:$vendor_b_partend_userdata
 	sgdisk /dev/block/mmcblk0 --change-name=$vendor_b_partnum:vendor_b
-	ui_print "[#] Formatting userdata..."
 	sleep 2
 	blockdev --rereadpt /dev/block/mmcblk0
 	sleep 1
 	# Calculate the length of userdata for make_ext4fs minus 16KB (for the encryption footer reservation)
-	userdata_new_partlength_sectors=`echo $((userdata_partend_current-userdata_treble_partstart))`
-	userdata_new_partlength_bytes=`echo $((userdata_new_partlength_sectors*512))`
-	userdata_new_ext4size=`echo $((userdata_new_partlength_bytes-16384))`
-	make_ext4fs -a /data -l $userdata_new_ext4size /dev/block/mmcblk0p$userdata_partnum_current
+	if [ "$dualboot_option" == "none" ]; then
+		ui_print "[#] Formatting userdata..."
+		userdata_new_partlength_sectors=`echo $((userdata_partend_current-userdata_treble_partstart))`
+		userdata_new_partlength_bytes=`echo $((userdata_new_partlength_sectors*512))`
+		userdata_new_ext4size=`echo $((userdata_new_partlength_bytes-16384))`
+		make_ext4fs -a /data -l $userdata_new_ext4size /dev/block/mmcblk0p$userdata_partnum_current
+	else
+		ui_print "[#] Formatting userdata_a..."
+		userdata_a_new_partlength_sectors=`echo $((userdata_a_partend-userdata_a_partstart))`
+		userdata_a_new_partlength_bytes=`echo $((userdata_a_new_partlength_sectors*512))`
+		userdata_a_new_ext4size=`echo $((userdata_a_new_partlength_bytes-16384))`
+		make_ext4fs -a /data -l $userdata_a_new_ext4size /dev/block/mmcblk0p$userdata_partnum
+		ui_print "[#] Formatting userdata_b..."
+		userdata_b_new_partlength_sectors=`echo $((userdata_b_partend-userdata_b_partstart))`
+		userdata_b_new_partlength_bytes=`echo $((userdata_b_new_partlength_sectors*512))`
+		userdata_b_new_ext4size=`echo $((userdata_b_new_partlength_bytes-16384))`
+		make_ext4fs -a /data -l $userdata_b_new_ext4size /dev/block/mmcblk0p$userdata_b_partnum
+	fi
 	ui_print "[#] Formatting vendor_a and vendor_b..."
 	sleep 2
 	make_ext4fs /dev/block/mmcblk0p$vendor_a_partnum
@@ -130,6 +184,10 @@ elif [ "$choice" == "treble_userdata" ]; then
 	ui_print "[i] All done!"
 	ui_print " "
 	ui_print "[i] You are now ready to install a any ROM (non-Treble or Treble) and/or Vendor pack."
+	if [ "$dualboot_option" != "none" ]; then
+		ui_print " "
+		ui_print "[i] Remember that you now have userdata_a and userdata_b for dualboot. All storage and userdata operations in TWRP and Android will be specific to the current slot."
+	fi
 elif [ "$choice" == "treble_system" ]; then
 	ui_print "[i] Starting Treble repartition by shrinking System..."
 	ui_print "[#] Shrinking system_a..."

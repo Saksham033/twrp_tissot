@@ -34,3 +34,5 @@ vendor_b_blockdev=/dev/block/mmcblk0p51
 userdata_partnum=49
 userdata_stock_partstart=14550032
 userdata_treble_partstart=17007634
+userdata_b_partnum=52
+userdata_b_blockdev=/dev/block/mmcblk0p52
