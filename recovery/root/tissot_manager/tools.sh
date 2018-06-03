@@ -85,7 +85,12 @@ isHotBoot() {
 vendorDualbootCheck() {
 	echo "na" > /tmp/dualboot_check
 	umount -f /vendor > /dev/null 2>&1
-	mount /dev/block/bootdevice/by-name/vendor_`getCurrentSlotLetter` /vendor > /dev/null 2>&1
+	if [ "$1" = "" ]; then
+		targetSlot=`getCurrentSlotLetter`
+	else
+		targetSlot="$1"
+	fi
+	mount "/dev/block/bootdevice/by-name/vendor_$targetSlot" /vendor > /dev/null 2>&1
 	if [ -f "/vendor/etc/fstab.qcom" ]; then
 		# We want to loop over all matching lines because there could be multiple userdata mounts (e.g. for ext4 and f2fs ROM's)
 		cat "/vendor/etc/fstab.qcom" | grep "/dev/block/bootdevice/by-name/userdata" | while read -r LINE; do
@@ -98,6 +103,9 @@ vendorDualbootCheck() {
 	fi
 	echo -n `cat /tmp/dualboot_check`
 	rm /tmp/dualboot_check
+	if [ "$2" != "noUnmount" ]; then
+		umount -f /vendor > /dev/null 2>&1
+	fi
 }
 
 # Patches the current slot vendor for dualboot (or back)
@@ -107,7 +115,7 @@ vendorDualbootCheck() {
 # "na" for error (missing or incompatible fstab)
 vendorDualbootPatch() {
 	echo "na" > /tmp/dualboot_patch
-	dualbootCheck=`vendorDualbootCheck`
+	dualbootCheck=`vendorDualbootCheck $1 noUnmount`
 	rm "/tmp/fstab.qcom.new" > /dev/null 2>&1
 	if [ -f "/vendor/etc/fstab.qcom" -a "$dualbootCheck" != "na" ]; then
 		# loop over the existing fstab and create a new one, modifying as necessary. Simplest way to replace a string in specific matching line
@@ -132,6 +140,44 @@ vendorDualbootPatch() {
 	echo -n `cat /tmp/dualboot_patch`
 	rm /tmp/dualboot_patch > /dev/null 2>&1
 	rm /tmp/fstab.qcom.new > /dev/null 2>&1
+	umount -f /vendor > /dev/null 2>&1
+}
+
+# used by both update_engine_sideload and flash_image to patch vendor
+dualBootInstallProcess() {
+	ui_print "[#] Dual boot vendor patch check..."
+	deviceIsDualboot="false"
+	if hasDualbootUserdata; then
+		deviceIsDualboot="true"
+	fi
+	vendorDualbootCheck=`vendorDualbootCheck $1`
+	if [ "$vendorDualbootCheck" = "na" ]; then
+		ui_print "    [!] Vendor is blank or incompatible, skipped."
+	else
+		if [ "$deviceIsDualboot" = "true" ]; then
+			if [ "$vendorDualbootCheck" = "singleboot" ]; then
+				patchResult=`vendorDualbootPatch $1`
+				if [ "$patchResult" = "dualboot" ]; then
+					ui_print "    [i] Dual boot patch succeeded!"
+				else
+					ui_print "    [i] Dual boot patch failed. Please save log and report this error and the vendor source."
+				fi
+			else
+				ui_print "    [i] Vendor is already dual boot patched, skipped."
+			fi
+		elif [ "$deviceIsDualboot" = "false" ]; then
+			if [ "$vendorDualbootCheck" = "dualboot" ]; then
+				patchResult=`vendorDualbootPatch $1`
+				if [ "$patchResult" = "singleboot" ]; then
+					ui_print "    [i] Vendor was dual boot - was patch for single boot."
+				else
+					ui_print "    [i] Single boot patch failed. Please save log and report this error and the vendor source."
+				fi
+			else
+				ui_print "    [i] Single boot device and Vendor, no patch necessary."
+			fi
+		fi
+	fi
 }
 
 # internal

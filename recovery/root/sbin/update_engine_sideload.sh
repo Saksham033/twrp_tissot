@@ -83,6 +83,9 @@ else
 	ui_print "[i] ROM install done to Slot `cat /tmp/target_slot`."
 	rm /tmp/target_slot
 	ui_print
+	# do dualboot stuff if needed
+	dualBootInstallProcess $otherSlot
+	ui_print
 	if [ -f "/tmp/twrp_survival_success" ]; then
 		rm "/tmp/twrp_survival_success"
 		ui_print "[i] TWRP was automatically re-installed to the new slot."

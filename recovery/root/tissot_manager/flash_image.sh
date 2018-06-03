@@ -92,6 +92,13 @@ if [ "$targetMount" = "/boot" ]; then
 	restoreTwrp `getCurrentSlotLetter`
 fi
 
+# do dualboot stuff if needed
+if [ "$targetMount" = "/vendor_image" ]; then
+	ui_print
+	dualBootInstallProcess
+	ui_print
+fi
+
 # cleanup
 rm /tmp/flash_image_source
 rm /tmp/flash_image_target
