@@ -12,7 +12,7 @@ source /tissot_manager/tools.sh
 chmod -R 777 /tissot_manager/*
 
 # check for dualboot mode (second userdata partition)
-if [ -b "/dev/block/mmcblk0p52" ]; then
+if [ -b "$userdata_b_blockdev" ]; then
 	mv /etc/recovery.fstab /etc/recovery.fstab.singleboot
 	mv /etc/recovery.fstab.dualboot /etc/recovery.fstab
 fi

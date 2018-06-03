@@ -936,6 +936,7 @@
 		</page>
 
 		<page name="appcheck">
+<!--	CosmicDan: Removed because we're on unofficial TWRP
 			<action>
 				<condition var1="tw_app_prompt" var2="1"/>
 				<action function="checkforapp"></action>
@@ -953,6 +954,10 @@
 
 			<action>
 				<condition var1="tw_app_install_status" var2="2"/>
+				<action function="reboot">%tw_reboot_param%</action>
+			</action>
+-->
+			<action>
 				<action function="reboot">%tw_reboot_param%</action>
 			</action>
 		</page>
@@ -3107,9 +3112,11 @@
 				<listitem name="{@rev_navbar_chk=Reversed navbar layout}">
 					<data variable="tw_samsung_navbar"/>
 				</listitem>
+<!--	CosmicDan: Removed because we're on unofficial TWRP
 				<listitem name="{@reboot_install_app_prompt_install=Prompt to install TWRP app on every reboot}">
 					<data variable="tw_app_prompt"/>
 				</listitem>
+-->
 				<listitem name="{@simact_chk=Simulate actions for theme testing}">
 					<data variable="tw_simulate_actions"/>
 				</listitem>
