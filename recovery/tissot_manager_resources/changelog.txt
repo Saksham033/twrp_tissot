@@ -1,3 +1,11 @@
+<b>2.0</b>
+
+<*>Implement dualboot system (see XDA thread for details)</*>
+<*>Add TWRP survival for flashing payload ZIP's (AIO's) and boot.img (see XDA thread for details)</*>
+<*>Added some text output and GUI prompts to assist users with dualboot and slot-related actions</*>
+<*>Various other small usability improvements and fixes</*>
+
+
 <b>1.5</b>
 
 <*>Return original TWRP theme (more familiar interface, multilanguage and slightly faster)</*>
