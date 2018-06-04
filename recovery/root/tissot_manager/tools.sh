@@ -115,7 +115,12 @@ vendorDualbootCheck() {
 # "na" for error (missing or incompatible fstab)
 vendorDualbootPatch() {
 	echo "na" > /tmp/dualboot_patch
-	dualbootCheck=`vendorDualbootCheck $1 noUnmount`
+	if [ "$1" = "" ]; then
+		targetSlot=`getCurrentSlotLetter`
+	else
+		targetSlot="$1"
+	fi
+	dualbootCheck=`vendorDualbootCheck $targetSlot noUnmount`
 	rm "/tmp/fstab.qcom.new" > /dev/null 2>&1
 	if [ -f "/vendor/etc/fstab.qcom" -a "$dualbootCheck" != "na" ]; then
 		# loop over the existing fstab and create a new one, modifying as necessary. Simplest way to replace a string in specific matching line
