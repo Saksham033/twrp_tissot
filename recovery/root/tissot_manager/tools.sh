@@ -77,6 +77,16 @@ isHotBoot() {
 	fi
 }
 
+isTrebleKernel() {
+	if cat /sys/firmware/devicetree/base/firmware/android/fstab/vendor/fsmgr_flags | grep -Fqe "slotselect"; then
+		# true/success
+		return 0
+	else
+		# false/error
+		return 1
+	fi
+}
+
 # Checks if current slot vendor is dualboot patched or not.
 # returns:
 # "dualboot" for dualboot patched
@@ -355,10 +365,20 @@ resumeTwrp() {
 
 if [ "$1" == "userdata_calc" ]; then
 	userdataCalcUsageRemainingForSlotA "$@"
+	exit 0
 elif [ "$1" == "vendorDualbootCheck" ]; then
 	vendorDualbootCheck
+	exit 0
 elif [ "$1" == "vendorDualbootPatch" ]; then
 	vendorDualbootPatch
+	exit 0
 elif [ "$1" == "hasDualbootUserdata" ]; then
 	hasDualbootUserdata
+	exit $?
+elif [ "$1" == "isTrebleKernel" ]; then
+	isTrebleKernel
+	exit $?
+elif [ "$1" == "isHotBoot" ]; then
+	isHotBoot
+	exit $?
 fi

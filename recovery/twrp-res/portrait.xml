@@ -3523,6 +3523,7 @@
 				<placement x="%center_x%" y="%row19_y%"/>
 				<text>{@tissot_manager=Tissot Manager}</text>
 				<actions>
+					<action function="stopmtp"/>
 					<action function="set">tw_back=advanced</action>
 					<action function="queueclear"/>
 					<action function="cmd">

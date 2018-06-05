@@ -30,9 +30,16 @@ abort() { ui_print "$*"; umount /system; umount /data; exit 1; }
 
 ui_print " ";
 ui_print "[#] Unmounting all eMMC partitions..."
+# This qseecomd jerk sometimes refuses to die, keeping mmcblk0 locked
 stop sbinqseecomd
 sleep 2
+kill `pidof qseecomd`
 mount | grep /dev/block/mmcblk0p | while read -r line ; do
+	thispart=`echo "$line" | awk '{ print $3 }'`
+	umount -f $thispart
+	sleep 0.5
+done
+mount | grep /dev/block/bootdevice/ | while read -r line ; do
 	thispart=`echo "$line" | awk '{ print $3 }'`
 	umount -f $thispart
 	sleep 0.5
@@ -41,8 +48,11 @@ sleep 2
 blockdev --rereadpt /dev/block/mmcblk0
 
 source /tissot_manager/constants.sh
-/sbin/sh /tissot_manager/get_partition_status.sh
-partition_status=$?
+partition_status=`cat /tmp/partition_status`
+if [ ! $partition_status -ge 0 ]; then
+	ui_print "[!] Error - partition status unknown! Was /tmp wiped? Aborting..."
+	exit 1
+fi
 
 choice=`file_getprop /tmp/aroma/choice_repartition.prop root`
 if [ "$choice" == "stock" ]; then
@@ -51,6 +61,9 @@ if [ "$choice" == "stock" ]; then
 	sgdisk /dev/block/mmcblk0 --delete $vendor_a_partnum
 	ui_print "[#] Deleting vendor_b..."
 	sgdisk /dev/block/mmcblk0 --delete $vendor_b_partnum
+	sleep 1
+	blockdev --rereadpt /dev/block/mmcblk0
+	sleep 0.5
 	if [ "$partition_status" == "2" ]; then
 		# system is shrunk
 		ui_print "[#] Growing system_a..."
@@ -109,6 +122,10 @@ if [ "$choice" == "stock" ]; then
 			sleep 1
 			# Calculate the length of userdata for make_ext4fs minus 16KB (for the encryption footer reservation)
 			userdata_new_partlength_sectors=`echo $((userdata_partend_current-userdata_stock_partstart))`
+			if [ "$partition_status" == "4" ]; then
+				# we want the userdata_b end sector instead
+				userdata_new_partlength_sectors=`echo $((userdata_b_partend_current-userdata_stock_partstart))`
+			fi
 			userdata_new_partlength_bytes=`echo $((userdata_new_partlength_sectors*512))`
 			userdata_new_ext4size=`echo $((userdata_new_partlength_bytes-16384))`
 			make_ext4fs -a /data -l $userdata_new_ext4size /dev/block/mmcblk0p$userdata_partnum_current
@@ -219,6 +236,11 @@ elif [ "$choice" == "treble_system" ]; then
 	ui_print " "
 	ui_print "[i] You are now ready to install a Treble ROM and/or Vendor pack. Non-Treble ROM's are now incompatible."
 fi;
+
+blockdev --rereadpt /dev/block/mmcblk0
+sleep 0.2
+sync /dev/block/mmcblk0
+sleep 0.2
 
 ui_print " ";
 ui_print " ";
