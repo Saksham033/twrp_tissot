@@ -26,7 +26,6 @@ if file_getprop("/tmp/aroma_prompt.prop", "task") == "flash_slot_prompt" then
 	exit("");
 endif;
 
-
 # set device from ro.product.device prop, abort if not possible
 setvar("device", sysprop("ro.product.device"));
 if (!getvar("device") == "tissot" ) then
@@ -38,20 +37,6 @@ if (!getvar("device") == "tissot" ) then
         "Wrong device",
         "@warning",
         "This is only for tissot (Mi A1) devices."
-    );
-    exit("");
-endif;
-
-# check for treble compatible kernel, abort if not
-setvar("isTrebleKernel", exec("/sbin/sh", "/tissot_manager/tools.sh", "isTrebleKernel"));
-if getvar("isTrebleKernel")==1 then
-	ini_set("text_next", "Exit");
-    ini_set("icon_next", "");
-    textbox(
-        "Error",
-        "Incompatible Kernel",
-        "@warning",
-        "Tissot Manager only contains Treble related functions, but your kernel is not Treble-ready. Cannot continue."
     );
     exit("");
 endif;

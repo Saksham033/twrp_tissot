@@ -1,6 +1,7 @@
 <b>2.1</b>
 
 <*>Fixed payload installer checking/printing the wrong source slot (should be boot slot instead of current slot)</*>
+<*>Removed incompatible kernel screen</*>
 
 
 
