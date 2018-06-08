@@ -1,3 +1,9 @@
+<b>2.1</b>
+
+<*>Fixed payload installer checking/printing the wrong source slot (should be boot slot instead of current slot)</*>
+
+
+
 <b>2.0</b>
 
 <*>Implement dualboot system (see XDA thread for details)</*>

@@ -40,7 +40,7 @@ getBootSlotLetter() {
 }
 
 getOtherSlotLetter() {
-	if [ `getCurrentSlotLetter` = "a" ]; then
+	if [ `getBootSlotLetter` = "a" ]; then
 		echo -n "b"
 	else
 		echo -n "a"

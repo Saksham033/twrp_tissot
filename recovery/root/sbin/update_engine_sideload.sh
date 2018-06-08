@@ -26,9 +26,9 @@ if isHotBoot; then
 	ui_print "    [#] Warning - fastboot hotboot detected. If you"
 	ui_print "        encounter issues, please flash TWRP first."
 fi
-currentSlot=`getCurrentSlotLetter`
+bootSlot=`getBootSlotLetter`
 otherSlot=`getOtherSlotLetter`
-ui_print "    [i] Current slot is $currentSlot, "
+ui_print "    [i] Boot slot is $bootSlot, "
 ui_print "        installing update to slot $otherSlot"
 if isTreble; then
 	ui_print "    [i] Device is Treble-compatible"

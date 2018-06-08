@@ -13,7 +13,7 @@ if file_getprop("/tmp/aroma_prompt.prop", "task") == "flash_slot_prompt" then
 	setvar("slot", file_getprop("/tmp/aroma_prompt.prop", "slot"));
 	form(
 		"Confirm ZIP install",
-		"You are about to install a ROM into Slot " + getvar("slot") + ". Please confirm.",
+		"You are about to install a ROM into boot Slot " + getvar("slot") + ". To change install slot, you must reboot recovery with the <i>other</i> slot active.",
 		"@chip",
 		"aroma_prompt_result.prop",
 		"confirm",	"Confirm",		"Confirm flashing to Slot " + getvar("slot") + ". This will erase existing ROM: '" +
