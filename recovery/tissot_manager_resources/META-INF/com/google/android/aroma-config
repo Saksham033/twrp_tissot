@@ -157,15 +157,15 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 			pleasewait("Calculating dual boot options...");
 			# gather size variables. We need to use exec_buffer on these calls for some reason.
 			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "4gb");
-			setvar("userdata_remaining_4gb", getvar("exec_buffer"));
+			setvar("userdata_remaining_4gb", file_getprop("/tmp/result.prop", "result"));
 			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "6gb");
-			setvar("userdata_remaining_6gb", getvar("exec_buffer"));
+			setvar("userdata_remaining_6gb", file_getprop("/tmp/result.prop", "result"));
 			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "8gb");
-			setvar("userdata_remaining_8gb", getvar("exec_buffer"));
+			setvar("userdata_remaining_8gb", file_getprop("/tmp/result.prop", "result"));
 			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "12gb");
-			setvar("userdata_remaining_12gb", getvar("exec_buffer"));
+			setvar("userdata_remaining_12gb", file_getprop("/tmp/result.prop", "result"));
 			exec("/sbin/sh", "/tissot_manager/tools.sh", "userdata_calc", "16gb");
-			setvar("userdata_remaining_16gb", getvar("exec_buffer"));
+			setvar("userdata_remaining_16gb", file_getprop("/tmp/result.prop", "result"));
 			
 			form(
 				"Dual boot",
@@ -248,18 +248,25 @@ if prop("choice_main_menu.prop","selected")=="2" then
 	pleasewait("Detecting existing patch status...");
 	
 	# dualboot status and text
-	setvar("hasDualbootUserdata", exec("/sbin/sh", "/tissot_manager/tools.sh", "hasDualbootUserdata"));
-	exec("/sbin/sh", "/tissot_manager/tools.sh", "vendorDualbootCheck");
-	setvar("vendorDualbootCheck", getvar("exec_buffer"));
-	setvar("dualboot_subtext", "Current vendor is empty or incompatible, cannot patch.");
-	if getvar("vendorDualbootCheck")=="singleboot" then
-		setvar("dualboot_subtext", "Current slot vendor is <#c00>single boot</#>. Tap to patch for <#00c>dual boot</#>.");
+	exec("/sbin/sh", "/tissot_manager/tools.sh", "doDualbootCheck");
+	setvar("doDualbootCheck", file_getprop("/tmp/result.prop", "result"));
+	setvar("dualboot_subtext", "Current slot is empty or incompatible, cannot patch.");
+	if getvar("doDualbootCheck")=="singleboot" then
+		setvar("dualboot_subtext", "Current slot is <#c00>single boot</#>. Tap to patch for <#00c>dual boot</#>.");
 	endif;
-	if getvar("vendorDualbootCheck")=="dualboot" then
-		setvar("dualboot_subtext", "Current slot vendor is <#00c>dual boot</#>. Tap to revert to <#c00>single boot</#> only.");
+	if getvar("doDualbootCheck")=="dualboot" then
+		setvar("dualboot_subtext", "Current slot is <#00c>dual boot</#>. Tap to revert to <#c00>single boot</#> only.");
 	endif;
-	if getvar("hasDualbootUserdata")==1 then
-		setvar("dualboot_subtext", "Unavailable - Userdata is not partitioned for dual boot.");
+	
+	# encryption status and text
+	exec("/sbin/sh", "/tissot_manager/tools.sh", "doEncryptionCheck");
+	setvar("doEncryptionCheck", file_getprop("/tmp/result.prop", "result"));
+	setvar("encryption_subtext", "Current slot encryption status is unknown is or invalid, cannot patch.");
+	if getvar("doEncryptionCheck")=="forced" then
+		setvar("encryption_subtext", "Current slot has <#0c0>forced</#> encryption. Tap to patch for <#00c>optional</#> encryption.");
+	endif;
+	if getvar("doEncryptionCheck")=="optional" then
+		setvar("encryption_subtext", "Current slot has <#00c>optional</#> encryption. Tap to change to <#0c0>forced</#> encryption.");
 	endif;
 	
 	# done building info, show menu
@@ -268,34 +275,71 @@ if prop("choice_main_menu.prop","selected")=="2" then
 		"Select your choice.",
 		"@patches",
 		"choice_patches.prop",
-		"Dual boot patch",			getvar("dualboot_subtext"),						"@dualboot",
-		"Back",						"Return to main menu",							"@home"
+		"Dual boot patch",			getvar("dualboot_subtext"),										"@dualboot",
+		"Userdata Encryption",		getvar("encryption_subtext"),									"@chip",
+		"Insecure ADBD on Boot",	"Patch for insecure ADBD on boot",								"@adb",
+		"Back",						"Return to main menu",											"@home"
 	);
 	
 	if prop("choice_patches.prop","selected")=="1" then
-		if getvar("hasDualbootUserdata")==0 then
-			# has userdata_a and _b
-			if getvar("vendorDualbootCheck")=="na" then
-				# unrecognized or empty vendor partition map
-				alert(
-					"Unable to patch",
-					"Your vendor partition is empty or incompatible. If you're sure there is a working Vendor pack installed to the current slot, please report this to CosmicDan.",
-					"@warning"
-				);
-			else
-				# run patch
-				pleasewait("Patching...");
-				exec("/sbin/sh", "/tissot_manager/tools.sh", "vendorDualbootPatch");
-			endif;
-		else
-			# no userdata_a and _b
+		if getvar("doDualbootCheck")=="na" then
+			# unrecognized or empty ROM/Vendor partition map
 			alert(
 				"Unable to patch",
-				"You have not partitioned for userdata_a and userdata_b. Please repartition your device to split userdata for dual boot.",
+				"Your ROM/Vendor is empty or incompatible with dual boot as it does not have a standard fstab. Please report this to your ROM developer.",
 				"@warning"
 			);
+		else
+			# run patch
+			pleasewait("Patching...");
+			exec("/sbin/sh", "/tissot_manager/tools.sh", "doDualbootPatch");
 		endif;
 		goto("patches");
+	endif;
+	
+	if prop("choice_patches.prop","selected")=="2" then
+		if getvar("doEncryptionCheck")=="unknown" then
+			# unrecognized encryption state
+			alert(
+				"Unable to patch",
+				"Your ROM/Vendor has an unknown userdata encryption flag. It cannot be changed as it probably doesn't support encryption at all.",
+				"@warning"
+			);
+		else
+			# run patch
+			pleasewait("Patching...");
+			exec("/sbin/sh", "/tissot_manager/tools.sh", "doEncryptionPatch");
+		endif;
+		goto("patches");
+	endif;
+	
+	if prop("choice_patches.prop","selected")=="3" then
+		agreebox(
+			"Insecure ADBD on Boot",
+			"Patch for insecure ADBD on boot",
+			"@adb",
+			"This process will modify build properties for ADBD on boot in insecure mode and add adbd binary from TWRP. This provides ADB access on boot without authentication. It does NOT provide root mode ADB.\n\n" + 
+			"<#c00><b>These changes will break verity - so make sure you are using Magisk or a modded kernel. Also note that this may break Safetynet. It is intended for development purposes and exposes your device to severe security issues.</b></#>\n\n\n" +
+			"<#c00><b>This process cannot be undone. Be sure you are aware of the implications.</b></#>\n\n\n" +
+			"Please check the box below to confirm, or Back to return.",
+			"I wish to make my device ADBD insecure",
+			"Check the box to confirm!"
+		);
+		
+		# flag for installer.sh
+		write("/tmp/doadb", "");
+
+		ini_set("text_next", "Return");
+		ini_set("icon_next", "@home");
+		setvar("retstatus",
+			install(
+				"Installing",
+				"<b>"+ini_get("rom_name")+"</b> is patching for ADBD.\n\n"+
+				"This may take a moment.",
+				"@adb",
+				"Done!"
+			)
+		);
 	endif;
 	
 	goto("start");

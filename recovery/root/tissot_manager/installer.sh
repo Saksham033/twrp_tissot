@@ -28,6 +28,47 @@ abort() { ui_print "$*"; umount /system; umount /data; exit 1; }
 
 ######
 
+source /tissot_manager/constants.sh
+source /tissot_manager/tools.sh
+
+if [ -f "/tmp/doadb" ]; then
+	rm /tmp/doadb
+	ui_print "[#] Mounting /system..."
+	targetSlot=`getCurrentSlotLetter`
+	mount "/dev/block/bootdevice/by-name/system_$targetSlot" /system > /dev/null 2>&1
+	if isTreble; then
+		ui_print "[#] Mounting /vendor..."
+		mount "/dev/block/bootdevice/by-name/vendor_$targetSlot" /vendor > /dev/null 2>&1
+	fi
+	
+	ui_print "[#] Searching all props and adjusting for insecure ADB on boot..."
+	# loop over all prop files on /system (and /vendor since it's symlinked at /system/system/vendor) and change adb-related options
+	for f in $(find -L /system -iname \*.prop); do 
+		#sed -i 's|ro.secure=.*|ro.secure=0|' "$f"
+		sed -i 's|ro.adb.secure=.*|ro.adb.secure=0|' "$f"
+		sed -i 's|ro.debuggable=.*|ro.debuggable=1|' "$f"
+		#sed -i 's|persist.sys.usb.config=.*|persist.sys.usb.config=adb|' "$f"
+	done
+	
+	ui_print "[#] Adding god-mode ADBD binary to /system..."
+	# replace every occurance of adbd on /system (and /vendor since it's symlinked at /system/system/vendor) with recovery version. The path of adbd varies per ROM so this ensures it will work.
+	for f in $(find /system -iname adbd); do
+		cp -a "/sbin/adbd" "$f"
+		chmod 750 "$f"
+		chown root:shell "$f"
+	done
+	
+	umount -f /system > /dev/null 2>&1
+	if isTreble; then
+		umount -f /vendor > /dev/null 2>&1
+	fi
+	
+	ui_print "[i] Done!"
+	
+	exit 0
+fi
+
+
 ui_print " ";
 ui_print "[#] Unmounting all eMMC partitions..."
 # This qseecomd jerk sometimes refuses to die, keeping mmcblk0 locked
@@ -47,7 +88,6 @@ done
 sleep 2
 blockdev --rereadpt /dev/block/mmcblk0
 
-source /tissot_manager/constants.sh
 partition_status=`cat /tmp/partition_status`
 if [ ! $partition_status -ge 0 ]; then
 	ui_print "[!] Error - partition status unknown! Was /tmp wiped? Aborting..."

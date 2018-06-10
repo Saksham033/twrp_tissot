@@ -31,19 +31,19 @@ for l in /proc/self/fd/*; do
 done
 
 getCurrentSlotLetter() {
-	systemSymlink=`readlink /dev/block/bootdevice/by-name/system`
-	echo -n $systemSymlink | tail -c 1
+	systemSymlink=`readlink /dev/block/bootdevice/by-name/system` 2>/dev/null
+	echo -n $systemSymlink 2>/dev/null | tail -c 1 2>/dev/null
 }
 
 getBootSlotLetter() {
-	getprop ro.boot.slot_suffix | sed 's|_||'
+	getprop ro.boot.slot_suffix 2>/dev/null | sed 's|_||' 2>/dev/null
 }
 
 getOtherSlotLetter() {
 	if [ `getBootSlotLetter` = "a" ]; then
-		echo -n "b"
+		echo -n "b" 2>/dev/null
 	else
-		echo -n "a"
+		echo -n "a" 2>/dev/null
 	fi
 }
 
@@ -87,23 +87,31 @@ isTrebleKernel() {
 	fi
 }
 
-# Checks if current slot vendor is dualboot patched or not.
+# Checks if current slot is dualboot patched or not.
 # returns:
 # "dualboot" for dualboot patched
 # "singleboot" for singleboot standard
 # "na" for error (missing or incompatible fstab)
-vendorDualbootCheck() {
+doDualbootCheck() {
 	echo "na" > /tmp/dualboot_check
-	umount -f /vendor > /dev/null 2>&1
+	umount -f /system > /dev/null 2>&1
+	if isTreble; then
+		umount -f /vendor > /dev/null 2>&1
+	fi
 	if [ "$1" = "" ]; then
 		targetSlot=`getCurrentSlotLetter`
 	else
 		targetSlot="$1"
 	fi
-	mount "/dev/block/bootdevice/by-name/vendor_$targetSlot" /vendor > /dev/null 2>&1
-	if [ -f "/vendor/etc/fstab.qcom" ]; then
+	
+	mount "/dev/block/bootdevice/by-name/system_$targetSlot" /system > /dev/null 2>&1
+	if isTreble; then
+		mount "/dev/block/bootdevice/by-name/vendor_$targetSlot" /vendor > /dev/null 2>&1
+	fi
+
+	if [ -f "/system/system/vendor/etc/fstab.qcom" ]; then
 		# We want to loop over all matching lines because there could be multiple userdata mounts (e.g. for ext4 and f2fs ROM's)
-		cat "/vendor/etc/fstab.qcom" | grep "/dev/block/bootdevice/by-name/userdata" | while read -r LINE; do
+		cat "/system/system/vendor/etc/fstab.qcom" | grep "/dev/block/bootdevice/by-name/userdata" | while read -r LINE; do
 			if echo $LINE | grep -Fqe ",slotselect"; then
 				echo "dualboot" > /tmp/dualboot_check
 			else
@@ -111,32 +119,35 @@ vendorDualbootCheck() {
 			fi
 		done
 	fi
-	echo -n `cat /tmp/dualboot_check`
+	retval=`cat /tmp/dualboot_check`
+	echo -n $retval
 	rm /tmp/dualboot_check
+	echo "result=$retval" > /tmp/result.prop
 	if [ "$2" != "noUnmount" ]; then
 		umount -f /vendor > /dev/null 2>&1
+		umount -f /system > /dev/null 2>&1
 	fi
 }
 
-# Patches the current slot vendor for dualboot (or back)
+# Patches the current slot vendor and/or system for dualboot (or back)
 # returns:
 # "dualboot" for dualboot patch succeeded
 # "singleboot" for singleboot patch succeeded
 # "na" for error (missing or incompatible fstab)
-vendorDualbootPatch() {
+doDualbootPatch() {
 	echo "na" > /tmp/dualboot_patch
 	if [ "$1" = "" ]; then
 		targetSlot=`getCurrentSlotLetter`
 	else
 		targetSlot="$1"
 	fi
-	dualbootCheck=`vendorDualbootCheck $targetSlot noUnmount`
+	dualbootCheck=`doDualbootCheck $targetSlot noUnmount`
 	rm "/tmp/fstab.qcom.new" > /dev/null 2>&1
-	if [ -f "/vendor/etc/fstab.qcom" -a "$dualbootCheck" != "na" ]; then
+	if [ -f "/system/system/vendor/etc/fstab.qcom" -a "$dualbootCheck" != "na" ]; then
 		# loop over the existing fstab and create a new one, modifying as necessary. Simplest way to replace a string in specific matching line
 		{
 			IFS=''
-			cat "/vendor/etc/fstab.qcom" | while read LINE; do
+			cat "/system/system/vendor/etc/fstab.qcom" | while read LINE; do
 				if echo $LINE | grep -Fqe "/dev/block/bootdevice/by-name/userdata"; then
 					if [ "$dualbootCheck" = "dualboot" ]; then
 						LINE=`echo $LINE | sed 's|,slotselect||'`
@@ -149,47 +160,50 @@ vendorDualbootPatch() {
 				echo $LINE >> "/tmp/fstab.qcom.new"
 			done
 		}
-		mv -f "/tmp/fstab.qcom.new" "/vendor/etc/fstab.qcom"
-		chmod 0644 "/vendor/etc/fstab.qcom"
+		mv -f "/tmp/fstab.qcom.new" "/system/system/vendor/etc/fstab.qcom"
+		chmod 0644 "/system/system/vendor/etc/fstab.qcom"
 	fi
 	echo -n `cat /tmp/dualboot_patch`
 	rm /tmp/dualboot_patch > /dev/null 2>&1
 	rm /tmp/fstab.qcom.new > /dev/null 2>&1
-	umount -f /vendor > /dev/null 2>&1
+	if isTreble; then
+		umount -f /vendor > /dev/null 2>&1
+	fi
+	umount -f /system > /dev/null 2>&1
 }
 
 # used by both update_engine_sideload and flash_image to patch vendor
 dualBootInstallProcess() {
-	ui_print "[#] Dual boot vendor patch check..."
+	ui_print "[#] Dual boot patch check..."
 	deviceIsDualboot="false"
 	if hasDualbootUserdata; then
 		deviceIsDualboot="true"
 	fi
-	vendorDualbootCheck=`vendorDualbootCheck $1`
-	if [ "$vendorDualbootCheck" = "na" ]; then
-		ui_print "    [!] Vendor is blank or incompatible, skipped."
+	dualbootCheck=`doDualbootCheck $1`
+	if [ "$dualbootCheck" = "na" ]; then
+		ui_print "    [!] ROM/Vendor is incompatible with dual boot, skipped."
 	else
 		if [ "$deviceIsDualboot" = "true" ]; then
-			if [ "$vendorDualbootCheck" = "singleboot" ]; then
-				patchResult=`vendorDualbootPatch $1`
+			if [ "$dualbootCheck" = "singleboot" ]; then
+				patchResult=`doDualbootPatch $1`
 				if [ "$patchResult" = "dualboot" ]; then
 					ui_print "    [i] Dual boot patch succeeded!"
 				else
 					ui_print "    [i] Dual boot patch failed. Please save log and report this error and the vendor source."
 				fi
 			else
-				ui_print "    [i] Vendor is already dual boot patched, skipped."
+				ui_print "    [i] ROM/Vendor is already dual boot patched, skipped."
 			fi
 		elif [ "$deviceIsDualboot" = "false" ]; then
-			if [ "$vendorDualbootCheck" = "dualboot" ]; then
-				patchResult=`vendorDualbootPatch $1`
+			if [ "$dualbootCheck" = "dualboot" ]; then
+				patchResult=`doDualbootPatch $1`
 				if [ "$patchResult" = "singleboot" ]; then
-					ui_print "    [i] Vendor was dual boot - was patch for single boot."
+					ui_print "    [i] ROM/Vendor was dual boot - is now patched for single boot."
 				else
 					ui_print "    [i] Single boot patch failed. Please save log and report this error and the vendor source."
 				fi
 			else
-				ui_print "    [i] Single boot device and Vendor, no patch necessary."
+				ui_print "    [i] Device is single boot and so is ROM/Vendor - no patch necessary."
 			fi
 		fi
 	fi
@@ -340,9 +354,13 @@ userdataCalcUsageRemainingForSlotA() {
 	fi
 	# subtract vendor_a and vendor_b
 	if [ "$3" == "as_sectors" ]; then
-		echo -n $((userdata_a_shrunk-2457600))
+		result=$((userdata_a_shrunk-2457600))
+		echo -n $result
+		echo -n "result=$result" > /tmp/result.prop
 	else
-		echo -n "`dc $userdata_a_shrunk 1.2 - p`"
+		result=`dc $userdata_a_shrunk 1.2 - p`
+		echo -n $result
+		echo -n "result=$result" > /tmp/result.prop
 	fi
 }
 
@@ -358,7 +376,95 @@ resumeTwrp() {
 	done;
 }
 
+doEncryptionCheck() {
+	echo "unknown" > /tmp/encryption_check
+	umount -f /system > /dev/null 2>&1
+	if isTreble; then
+		umount -f /vendor > /dev/null 2>&1
+	fi
+	if [ "$1" = "" ]; then
+		targetSlot=`getCurrentSlotLetter`
+	else
+		targetSlot="$1"
+	fi
+	
+	mount "/dev/block/bootdevice/by-name/system_$targetSlot" /system > /dev/null 2>&1
+	if isTreble; then
+		mount "/dev/block/bootdevice/by-name/vendor_$targetSlot" /vendor > /dev/null 2>&1
+	fi
 
+	if [ -f "/system/system/vendor/etc/fstab.qcom" ]; then
+		# We want to loop over all matching lines because there could be multiple userdata mounts (e.g. for ext4 and f2fs ROM's)
+		cat "/system/system/vendor/etc/fstab.qcom" | grep "/dev/block/bootdevice/by-name/userdata" | while read -r LINE; do
+			result=`cat /tmp/encryption_check`
+			if echo $LINE | grep -Fqe ",forceencrypt=footer"; then
+				if [ "$result" == "unknown" -o "$result" == "forced" ]; then
+					echo "forced" > /tmp/encryption_check
+				else
+					# we got a different result than the last set result
+					echo "invalid" > /tmp/encryption_check
+				fi
+			fi
+			
+			if echo $LINE | grep -Fqe ",encryptable=footer"; then
+				if [ "$result" == "unknown" -o "$result" == "optional" ]; then
+					echo "optional" > /tmp/encryption_check
+				else
+					# we got a different result than the last set result
+					echo "invalid" > /tmp/encryption_check
+				fi
+			fi
+		done
+	fi
+	result=`cat /tmp/encryption_check`
+	echo -n "$result"
+	if [ "$result" == "invalid" ]; then
+		result="unknown"
+	fi
+	echo "result=$result" > /tmp/result.prop
+	if [ "$2" != "noUnmount" ]; then
+		umount -f /vendor > /dev/null 2>&1
+		umount -f /system > /dev/null 2>&1
+	fi
+}
+
+doEncryptionPatch() {
+	echo "unknown" > /tmp/encryption_patch
+	if [ "$1" = "" ]; then
+		targetSlot=`getCurrentSlotLetter`
+	else
+		targetSlot="$1"
+	fi
+	encryptionCheck=`doEncryptionCheck $targetSlot noUnmount`
+	rm "/tmp/fstab.qcom.new" > /dev/null 2>&1
+	if [ -f "/system/system/vendor/etc/fstab.qcom" -a "$encryptionCheck" != "unknown" ]; then
+		# loop over the existing fstab and create a new one, modifying as necessary. Simplest way to replace a string in specific matching line
+		{
+			IFS=''
+			cat "/system/system/vendor/etc/fstab.qcom" | while read LINE; do
+				if echo $LINE | grep -Fqe "/dev/block/bootdevice/by-name/userdata"; then
+					if [ "$encryptionCheck" = "forced" ]; then
+						LINE=`echo $LINE | sed 's|,forceencrypt=footer|,encryptable=footer|'`
+						echo "optional" > /tmp/encryption_patch
+					elif [ "$encryptionCheck" = "optional" ]; then
+						LINE=`echo $LINE | sed 's|,encryptable=footer|,forceencrypt=footer|'`
+						echo "forced" > /tmp/encryption_patch
+					fi
+				fi
+				echo $LINE >> "/tmp/fstab.qcom.new"
+			done
+		}
+		mv -f "/tmp/fstab.qcom.new" "/system/system/vendor/etc/fstab.qcom"
+		chmod 0644 "/system/system/vendor/etc/fstab.qcom"
+	fi
+	echo -n `cat /tmp/encryption_patch`
+	rm /tmp/encryption_patch > /dev/null 2>&1
+	rm /tmp/fstab.qcom.new > /dev/null 2>&1
+	if isTreble; then
+		umount -f /vendor > /dev/null 2>&1
+	fi
+	umount -f /system > /dev/null 2>&1
+}
 
 #################################
 # Entrypoints for Tissot Manager
@@ -366,11 +472,11 @@ resumeTwrp() {
 if [ "$1" == "userdata_calc" ]; then
 	userdataCalcUsageRemainingForSlotA "$@"
 	exit 0
-elif [ "$1" == "vendorDualbootCheck" ]; then
-	vendorDualbootCheck
+elif [ "$1" == "doDualbootCheck" ]; then
+	doDualbootCheck
 	exit 0
-elif [ "$1" == "vendorDualbootPatch" ]; then
-	vendorDualbootPatch
+elif [ "$1" == "doDualbootPatch" ]; then
+	doDualbootPatch
 	exit 0
 elif [ "$1" == "hasDualbootUserdata" ]; then
 	hasDualbootUserdata
@@ -381,4 +487,10 @@ elif [ "$1" == "isTrebleKernel" ]; then
 elif [ "$1" == "isHotBoot" ]; then
 	isHotBoot
 	exit $?
+elif [ "$1" == "doEncryptionCheck" ]; then
+	doEncryptionCheck
+	exit 0
+elif [ "$1" == "doEncryptionPatch" ]; then
+	doEncryptionPatch
+	exit 0
 fi
