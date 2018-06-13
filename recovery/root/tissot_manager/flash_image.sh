@@ -32,6 +32,8 @@ isFilesystem=false
 # TWRP survival for boot images
 if [ "$targetMount" = "/boot" ]; then
 	backupTwrp
+elif [ "$targetMount" = "/boot_nosurvival" ]; then
+	ui_print "[i] Skipping TWRP survival as per user request"
 fi
 
 # look for mount point and type from recovery.fstab

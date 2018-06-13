@@ -16,9 +16,11 @@ if file_getprop("/tmp/aroma_prompt.prop", "task") == "flash_slot_prompt" then
 		"You are about to install a ROM into boot Slot " + getvar("slot") + ". To change install slot, you must reboot recovery with the <i>other</i> slot active.",
 		"@chip",
 		"aroma_prompt_result.prop",
-		"confirm",	"Confirm",		"Confirm flashing to Slot " + getvar("slot") + ". This will erase existing ROM: '" +
-										"<b>" + getvar("id") + "</b>'.",												"select.selected",
-		"cancel",   "Cancel",		"Cancel installation and return to TWRP.",											"select"
+		"confirm",	"Confirm",					"Confirm flashing to Slot " + getvar("slot") + ". This will erase existing ROM: '" +
+													"<b>" + getvar("id") + "</b>'.",												"select.selected",
+		"cancel",	"Cancel",					"Cancel installation and return to TWRP.",											"select",
+		"survival",	"TWRP/RAMDisk survival",	"Perform TWRP/RAMDisk survival if possible. For advanced users: uncheck this " + 
+													"to use the 100% original boot image in the payload.",							"check.checked"
 	);
 	if prop("aroma_prompt_result.prop","root") == "confirm" then
 		write("/tmp/flash_confirm", "");

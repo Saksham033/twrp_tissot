@@ -1,8 +1,9 @@
 <b>2.2</b>
 
-<*>Support dual boot patch for non-Treble ROM's</*>
+<*>Support dual boot patch for non-Treble ROM's (tested on stock Oreo)</*>
 <*>Add 'Insecure ADBD on Boot' to Patches menu</*>
 <*>Add Encryption forced/optional toggle to Patches menu</*>
+<*>Add option to skip TWRP survival during payload and boot image flashing (mainly for developers).</*>
 
 
 <b>2.1</b>
