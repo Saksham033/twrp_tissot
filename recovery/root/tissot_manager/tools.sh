@@ -162,6 +162,8 @@ doDualbootPatch() {
 		}
 		mv -f "/tmp/fstab.qcom.new" "/system/system/vendor/etc/fstab.qcom"
 		chmod 0644 "/system/system/vendor/etc/fstab.qcom"
+		chown root:root "/system/system/vendor/etc/fstab.qcom"
+		restorecon -v "/system/system/vendor/etc/fstab.qcom"
 	fi
 	echo -n `cat /tmp/dualboot_patch`
 	rm /tmp/dualboot_patch > /dev/null 2>&1
@@ -456,6 +458,8 @@ doEncryptionPatch() {
 		}
 		mv -f "/tmp/fstab.qcom.new" "/system/system/vendor/etc/fstab.qcom"
 		chmod 0644 "/system/system/vendor/etc/fstab.qcom"
+		chown root:root "/system/system/vendor/etc/fstab.qcom"
+		restorecon -v "/system/system/vendor/etc/fstab.qcom"
 	fi
 	echo -n `cat /tmp/encryption_patch`
 	rm /tmp/encryption_patch > /dev/null 2>&1

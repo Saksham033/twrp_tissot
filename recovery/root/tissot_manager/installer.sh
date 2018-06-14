@@ -48,6 +48,7 @@ if [ -f "/tmp/doadb" ]; then
 		sed -i 's|ro.adb.secure=.*|ro.adb.secure=0|' "$f"
 		sed -i 's|ro.debuggable=.*|ro.debuggable=1|' "$f"
 		#sed -i 's|persist.sys.usb.config=.*|persist.sys.usb.config=adb|' "$f"
+		restorecon -v "$f"
 	done
 	
 	ui_print "[#] Adding god-mode ADBD binary to /system..."
@@ -56,6 +57,7 @@ if [ -f "/tmp/doadb" ]; then
 		cp -a "/sbin/adbd" "$f"
 		chmod 750 "$f"
 		chown root:shell "$f"
+		restorecon -v "$f"
 	done
 	
 	umount -f /system > /dev/null 2>&1

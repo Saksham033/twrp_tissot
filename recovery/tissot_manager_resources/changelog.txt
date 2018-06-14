@@ -1,9 +1,16 @@
+<b>2.3</b>
+
+<*>Fix for SELinux enforcing ROMs (e.g. Developer menu crash)</*>
+
+
+
 <b>2.2</b>
 
 <*>Support dual boot patch for non-Treble ROM's (tested on stock Oreo)</*>
 <*>Add 'Insecure ADBD on Boot' to Patches menu</*>
 <*>Add Encryption forced/optional toggle to Patches menu</*>
 <*>Add option to skip TWRP survival during payload and boot image flashing (mainly for developers).</*>
+
 
 
 <b>2.1</b>
@@ -19,6 +26,7 @@
 <*>Add TWRP survival for flashing payload ZIP's (AIO's) and boot.img (see XDA thread for details)</*>
 <*>Added some text output and GUI prompts to assist users with dualboot and slot-related actions</*>
 <*>Various other small usability improvements and fixes</*>
+
 
 
 <b>1.5</b>
