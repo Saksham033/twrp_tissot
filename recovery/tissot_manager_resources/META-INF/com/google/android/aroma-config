@@ -25,6 +25,9 @@ if file_getprop("/tmp/aroma_prompt.prop", "task") == "flash_slot_prompt" then
 	if prop("aroma_prompt_result.prop","root") == "confirm" then
 		write("/tmp/flash_confirm", "");
 	endif;
+	if prop("aroma_prompt_result.prop","survival") != "1" then
+		write("/tmp/flash_skip_survival", "");
+	endif;
 	exit("");
 endif;
 

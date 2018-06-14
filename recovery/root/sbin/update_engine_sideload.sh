@@ -19,11 +19,11 @@ if ! shouldDoPayloadInstall; then
 fi
 
 # TWRP survival
-if [ "$(file_getprop /tmp/aroma/aroma_prompt_result.prop survival)" == "1" ]; then
-	backupTwrp
-else
+if [ -f "/tmp/flash_skip_survival" ]; then
 	ui_print
 	ui_print "[i] Skipping TWRP survival as per user request"
+else
+	backupTwrp
 fi
 ui_print
 ui_print "[#] Starting update_engine_sideload..."
@@ -84,7 +84,9 @@ if [ -f "/tmp/update_engine_sideload_error" ]; then
 	ui_print "    - Save Log in TWRP to share with others for help."
 else
 	# TWRP survival
-	if [ "$(file_getprop /tmp/aroma/aroma_prompt_result.prop survival)" == "1" ]; then
+	if [ -f "/tmp/flash_skip_survival" ]; then
+		rm -f "/tmp/flash_skip_survival"
+	else
 		restoreTwrp $otherSlot
 	fi
 	ui_print "[i] ROM install done to Slot `cat /tmp/target_slot`."
