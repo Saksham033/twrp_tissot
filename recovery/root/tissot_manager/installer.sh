@@ -22,7 +22,6 @@ ui_print() {
 show_progress() { echo "progress $1 $2" > $OUTFD; }
 set_progress() { echo "set_progress $1" > $OUTFD; }
 
-file_getprop() { grep "^$2" "$1" | cut -d= -f2; }
 getprop() { test -e /sbin/getprop && /sbin/getprop $1 || file_getprop /default.prop $1; }
 abort() { ui_print "$*"; umount /system; umount /data; exit 1; }
 
@@ -31,6 +30,7 @@ abort() { ui_print "$*"; umount /system; umount /data; exit 1; }
 source /tissot_manager/constants.sh
 source /tissot_manager/tools.sh
 
+# ADBD patch
 if [ -f "/tmp/doadb" ]; then
 	rm /tmp/doadb
 	ui_print "[#] Mounting /system..."
@@ -70,7 +70,43 @@ if [ -f "/tmp/doadb" ]; then
 	exit 0
 fi
 
+# SELinux patch
+if [ -f "/tmp/doselinux" ]; then
+	rm /tmp/doselinux
+	boot_slot=`getBootSlotLetter`
+	ui_print "[#] Dumping boot.img from slot $boot_slot ..."
+	dumpAndSplitBoot $boot_slot
+	
+	# we'll cat the actual dumped commandline here as an additional verification
+	cmdline=`cat /tmp/boot_split/boot.img-cmdline`
+	if echo $cmdline | grep -Fqe "androidboot.selinux=permissive"; then
+		sed -i 's|androidboot.selinux=permissive|androidboot.selinux=enforcing|' "/tmp/boot_split/boot.img-cmdline"
+	elif echo $cmdline | grep -Fqe "androidboot.selinux=enforcing"; then
+		sed -i 's|androidboot.selinux=enforcing|androidboot.selinux=permissive|' "/tmp/boot_split/boot.img-cmdline"
+	else
+		ui_print "[!] Unrecognized kernel commandline, cannot patch. See log for details."
+		rm -rf /tmp/boot_split
+		exit 0
+	fi
+	ui_print "[i] Patched kernel cmdline"
+	ui_print "[#] Repacking patched boot.img..."
+	bootimg cvf "/tmp/boot-new.img" "/tmp/boot_split"
+	if [ -f "/tmp/boot-new.img" ]; then
+		ui_print "[#] Flashing patched boot.img..."
+		dd if=/tmp/boot-new.img of=/dev/block/bootdevice/by-name/boot_$boot_slot
+		rm /tmp/boot-new.img
+	else
+		ui_print "[!] Error occured while repacking boot.img, cannot patch. See log for details."
+		rm -rf /tmp/boot_split
+		exit 0
+	fi
+	rm -rf /tmp/boot_split
+	ui_print "[i] Done!"
+	exit 0
+fi
 
+
+# Repartition
 ui_print " ";
 ui_print "[#] Unmounting all eMMC partitions..."
 # This qseecomd jerk sometimes refuses to die, keeping mmcblk0 locked

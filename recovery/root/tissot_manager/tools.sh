@@ -30,6 +30,8 @@ for l in /proc/self/fd/*; do
 	fi
 done
 
+file_getprop() { grep "^$2" "$1" | cut -d= -f2; }
+
 getCurrentSlotLetter() {
 	systemSymlink=`readlink /dev/block/bootdevice/by-name/system` 2>/dev/null
 	echo -n $systemSymlink 2>/dev/null | tail -c 1 2>/dev/null
@@ -141,7 +143,8 @@ doDualbootPatch() {
 	else
 		targetSlot="$1"
 	fi
-	dualbootCheck=`doDualbootCheck $targetSlot noUnmount`
+	doDualbootCheck $targetSlot noUnmount
+	dualbootCheck=`file_getprop /tmp/result.prop result`
 	rm "/tmp/fstab.qcom.new" > /dev/null 2>&1
 	if [ -f "/system/system/vendor/etc/fstab.qcom" -a "$dualbootCheck" != "na" ]; then
 		# loop over the existing fstab and create a new one, modifying as necessary. Simplest way to replace a string in specific matching line
@@ -181,7 +184,8 @@ dualBootInstallProcess() {
 	if hasDualbootUserdata; then
 		deviceIsDualboot="true"
 	fi
-	dualbootCheck=`doDualbootCheck $1`
+	doDualbootCheck $1
+	dualbootCheck=`file_getprop /tmp/result.prop result`
 	if [ "$dualbootCheck" = "na" ]; then
 		ui_print "    [!] ROM/Vendor is incompatible with dual boot, skipped."
 	else
@@ -378,6 +382,19 @@ resumeTwrp() {
 	done;
 }
 
+doSelinuxCheck() {
+	result="unknown"
+	cmdline=`cat /proc/cmdline`
+	if echo $cmdline | grep -Fqe "androidboot.selinux=permissive"; then
+		result="permissive"
+	fi
+	if echo $cmdline | grep -Fqe "androidboot.selinux=enforcing"; then
+		result="enforcing"
+	fi
+	echo -n "$result"
+	echo "result=$result" > /tmp/result.prop
+}
+
 doEncryptionCheck() {
 	echo "unknown" > /tmp/encryption_check
 	umount -f /system > /dev/null 2>&1
@@ -497,4 +514,9 @@ elif [ "$1" == "doEncryptionCheck" ]; then
 elif [ "$1" == "doEncryptionPatch" ]; then
 	doEncryptionPatch
 	exit 0
+elif [ "$1" == "doSelinuxCheck" ]; then
+	doSelinuxCheck
+	exit 0
+elif [ "$1" == "getBootSlotLetter" ]; then
+	echo -n `getBootSlotLetter`
 fi

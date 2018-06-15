@@ -1,6 +1,7 @@
 <b>2.3</b>
 
-<*>Fix for SELinux enforcing ROMs (e.g. Developer menu crash)</*>
+<*>Fixes for SELinux enforcing ROMs (e.g. Developer menu crash with dual boot)</*>
+<*>Add SELinux permissive/enforcing option to Patches menu</*>
 
 
 

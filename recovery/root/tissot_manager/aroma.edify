@@ -274,6 +274,21 @@ if prop("choice_main_menu.prop","selected")=="2" then
 		setvar("encryption_subtext", "Current slot has <#00c>optional</#> encryption. Tap to change to <#0c0>forced</#> encryption.");
 	endif;
 	
+	# get boot slot letter
+	exec("/sbin/sh", "/tissot_manager/tools.sh", "getBootSlotLetter");
+	setvar("bootSlotLetter", getvar("exec_buffer"));
+	
+	# selinux status and text
+	exec("/sbin/sh", "/tissot_manager/tools.sh", "doSelinuxCheck");
+	setvar("doSelinuxCheck", file_getprop("/tmp/result.prop", "result"));
+	setvar("selinux_subtext", "Boot slot <b>" + getvar("bootSlotLetter") + "</b> SELinux mode is unknown or invalid, cannot patch.");
+	if getvar("doSelinuxCheck")=="permissive" then
+		setvar("selinux_subtext", "Boot slot <b>" + getvar("bootSlotLetter") + "</b> has <#c00>permissive</#> mode SELinux. Tap to patch kernel for <#00c>enforcing</#> mode.");
+	endif;
+	if getvar("doSelinuxCheck")=="enforcing" then
+		setvar("selinux_subtext", "Boot slot <b>" + getvar("bootSlotLetter") + "</b> has <#00c>enforcing</#> mode SELinux. Tap to patch kernel for <#c00>permissive</#> mode.");
+	endif;
+	
 	# done building info, show menu
 	menubox(
 		"Patches",
@@ -282,6 +297,7 @@ if prop("choice_main_menu.prop","selected")=="2" then
 		"choice_patches.prop",
 		"Dual boot patch",			getvar("dualboot_subtext"),										"@dualboot",
 		"Userdata Encryption",		getvar("encryption_subtext"),									"@chip",
+		"SELinux Mode",				getvar("selinux_subtext"),										"@lock",
 		"Insecure ADBD on Boot",	"Patch for insecure ADBD on boot",								"@adb",
 		"Back",						"Return to main menu",											"@home"
 	);
@@ -319,6 +335,39 @@ if prop("choice_main_menu.prop","selected")=="2" then
 	endif;
 	
 	if prop("choice_patches.prop","selected")=="3" then
+		agreebox(
+			"SELinux Mode",
+			"Patch boot slot <b>" + getvar("bootSlotLetter") + "</b> kernel for " + getvar("doSelinuxCheck") + " SELinux",
+			"@lock",
+			"This process will modify the kernel (boot.img) in the boot slot <b>" + getvar("bootSlotLetter") + "</b> for <b>" + getvar("doSelinuxCheck") + "</b> mode SELinux. This will permenently modify the boot.img. It can be reversed however by running this patch again.\n\n" +
+			"If you wish to patch the other slot, return to TWRP, change the Slot, and Reboot Recovery to load the other slot kernel.\n\n" +
+			"Note that this will have no effect on user ROM builds (e.g. stock ROM/kernel).\n\n" +
+			"<#c00><b>This is for advanced users and developers only. Enabling enforcing on a permissive ROM will likely result in errors and bootloop. Enabling permissive on an enforcing ROM will reduce device security.</b></#>\n\n\n" +
+			"Please check the box below to confirm, or Back to return.",
+			"I wish to patch slot <b>" + getvar("bootSlotLetter") + "</b> kernel to SELinux " + getvar("doSelinuxCheck"),
+			"Check the box to confirm!"
+		);
+		
+		# flag for installer.sh
+		write("/tmp/doselinux", "");
+		
+		ini_set("text_next", "Return");
+		ini_set("icon_next", "@home");
+		setvar("retstatus",
+			install(
+				"Installing",
+				"<b>"+ini_get("rom_name")+"</b> is patching for SELinux " + getvar("doSelinuxCheck") + ".\n\n"+
+				"This may take a moment.",
+				"@lock",
+				"Done! Your device will now reboot TWRP to load the modified kernel."
+			)
+		);
+		# We need to reboot after modifying kernel cmdline
+		write("/tmp/do_reboot_recovery", "");
+		exit("");
+	endif;
+	
+	if prop("choice_patches.prop","selected")=="4" then
 		agreebox(
 			"Insecure ADBD on Boot",
 			"Patch for insecure ADBD on boot",
