@@ -47,18 +47,34 @@ if [ -f "/tmp/doadb" ]; then
 		#sed -i 's|ro.secure=.*|ro.secure=0|' "$f"
 		sed -i 's|ro.adb.secure=.*|ro.adb.secure=0|' "$f"
 		sed -i 's|ro.debuggable=.*|ro.debuggable=1|' "$f"
-		#sed -i 's|persist.sys.usb.config=.*|persist.sys.usb.config=adb|' "$f"
+		sed -i 's|persist.sys.usb.config=.*|persist.sys.usb.config=adb|' "$f"
+		# restorecon should be enough here
 		restorecon -v "$f"
 	done
 	
 	ui_print "[#] Adding god-mode ADBD binary to /system..."
 	# replace every occurance of adbd on /system (and /vendor since it's symlinked at /system/system/vendor) with recovery version. The path of adbd varies per ROM so this ensures it will work.
 	for f in $(find /system -iname adbd); do
-		cp -a "/sbin/adbd" "$f"
-		chmod 750 "$f"
+		cp -a "/tissot_manager/adbd_godmode" "$f"
+		chmod 755 "$f"
 		chown root:shell "$f"
+		# file_contexts doesn't match our path because system is mounted at /system instead of root, so get the real path, extract context from file_contexts and use chcon instead
+		# first trim the extra /system from this file path
+		contextsPath=`echo $f | sed 's|/system||'`
+		if [ -f "/file_contexts" ]; then
+			contextsEntry=`cat "/file_contexts" | grep $contextsPath`
+			fileContext=`echo $contextsEntry | awk '{ print $2 }'`
+			if [ ! "$fileContext" == "" ]; then
+				chcon -v $fileContext "$f"
+				continue
+			fi
+		fi
+		
+		ui_print "[i] Could not find file_contexts entry for $contextsPath - if adbd is broken, then this patch is incompatible with this ROM."
+		# try restorecon anyway
 		restorecon -v "$f"
 	done
+
 	
 	umount -f /system > /dev/null 2>&1
 	if isTreble; then
@@ -84,9 +100,8 @@ if [ -f "/tmp/doselinux" ]; then
 	elif echo $cmdline | grep -Fqe "androidboot.selinux=enforcing"; then
 		sed -i 's|androidboot.selinux=enforcing|androidboot.selinux=permissive|' "/tmp/boot_split/boot.img-cmdline"
 	else
-		ui_print "[!] Unrecognized kernel commandline, cannot patch. See log for details."
-		rm -rf /tmp/boot_split
-		exit 0
+		# missing selinux flag, just add permissive before the buildvariant
+		sed -i 's| buildvariant=| androidboot.selinux=permissive buildvariant=|' "/tmp/boot_split/boot.img-cmdline"
 	fi
 	ui_print "[i] Patched kernel cmdline"
 	ui_print "[#] Repacking patched boot.img..."
@@ -100,7 +115,7 @@ if [ -f "/tmp/doselinux" ]; then
 		rm -rf /tmp/boot_split
 		exit 0
 	fi
-	rm -rf /tmp/boot_split
+	#rm -rf /tmp/boot_split
 	ui_print "[i] Done!"
 	exit 0
 fi

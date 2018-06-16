@@ -168,7 +168,9 @@ doDualbootPatch() {
 		chown root:root "/system/system/vendor/etc/fstab.qcom"
 		restorecon -v "/system/system/vendor/etc/fstab.qcom"
 	fi
-	echo -n `cat /tmp/dualboot_patch`
+	retval=`cat /tmp/dualboot_patch`
+	echo -n $retval
+	echo "result=$retval" > /tmp/result.prop
 	rm /tmp/dualboot_patch > /dev/null 2>&1
 	rm /tmp/fstab.qcom.new > /dev/null 2>&1
 	if isTreble; then
@@ -186,12 +188,14 @@ dualBootInstallProcess() {
 	fi
 	doDualbootCheck $1
 	dualbootCheck=`file_getprop /tmp/result.prop result`
+	rm /tmp/result.prop > /dev/null 2>&1
 	if [ "$dualbootCheck" = "na" ]; then
 		ui_print "    [!] ROM/Vendor is incompatible with dual boot, skipped."
 	else
 		if [ "$deviceIsDualboot" = "true" ]; then
 			if [ "$dualbootCheck" = "singleboot" ]; then
-				patchResult=`doDualbootPatch $1`
+				doDualbootPatch $1
+				patchResult=`file_getprop /tmp/result.prop result`
 				if [ "$patchResult" = "dualboot" ]; then
 					ui_print "    [i] Dual boot patch succeeded!"
 				else
@@ -202,7 +206,8 @@ dualBootInstallProcess() {
 			fi
 		elif [ "$deviceIsDualboot" = "false" ]; then
 			if [ "$dualbootCheck" = "dualboot" ]; then
-				patchResult=`doDualbootPatch $1`
+				doDualbootPatch $1
+				patchResult=`file_getprop /tmp/result.prop result`
 				if [ "$patchResult" = "singleboot" ]; then
 					ui_print "    [i] ROM/Vendor was dual boot - is now patched for single boot."
 				else
@@ -213,6 +218,7 @@ dualBootInstallProcess() {
 			fi
 		fi
 	fi
+	rm /tmp/result.prop > /dev/null 2>&1
 }
 
 # internal
