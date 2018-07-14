@@ -1749,7 +1749,6 @@
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>
 					<action function="page">action_page</action>
-					<action function="stopmtp"/>
 				</actions>
 			</button>
 
@@ -1768,21 +1767,16 @@
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>
 					<action function="page">action_page</action>
-					<action function="stopmtp"/>
 				</actions>
 			</button>
 
 			<action>
 				<touch key="home"/>
-				<action function="sleep">50000</action>
-				<action function="startmtp"/>
 				<action function="page">main</action>
 			</action>
 
 			<action>
 				<touch key="back"/>
-				<action function="sleep">50000</action>
-				<action function="startmtp"/>
 				<action function="page">backup</action>
 			</action>
 		</page>
@@ -2882,7 +2876,6 @@
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>
 					<action function="page">action_page</action>
-					<action function="stopmtp"/>
 				</actions>
 			</button>
 
@@ -2901,7 +2894,6 @@
 					<action function="set">tw_action_text2=</action>
 					<action function="set">tw_complete_text1={@changing_boot_slot_complete=Change Boot Slot Complete}</action>
 					<action function="page">action_page</action>
-					<action function="stopmtp"/>
 				</actions>
 			</button>
 
