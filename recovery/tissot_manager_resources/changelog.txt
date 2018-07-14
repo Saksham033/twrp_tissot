@@ -1,6 +1,15 @@
+<b>2.4</b>
+
+<*>Update to TWRP 3.2.2</*>
+<*>Add flashing and backup/restore of Modem images</*>
+<*>Fix image flashing for file paths with whitespace</*>
+<*>Remove annoying MTP stopping when changing slots (was only useful for dual boot - dual boot developers can do it manually as explained in thread)</*>
+
+
+
 <b>2.3</b>
 
-<*>Fix dual boot issues for non-Treble (hopefully) and SELinux enforcing ROMs (tested new RR AIO)</*>
+<*>Fix dual boot issues for non-Treble (hopefully) and SELinux enforcing ROMs (tested stock Oreo and new RR AIO)</*>
 <*>Add SELinux permissive/enforcing option to Patches menu</*>
 <*>Fixed/changed ADBD to true "god-mode" (root and insecure ADBD). For developers/hackers only - very insecure!</*>
 <*>Other minor fixes</*>
