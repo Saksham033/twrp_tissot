@@ -174,10 +174,10 @@ if prop("choice_main_menu.prop", "selected") == "1" then
 			
 			form(
 				"Dual boot",
-				"Shrinking userdata allows dual boot by splitting userdata into two slots. Select your choice.",
+				"DEVELOPERS ONLY. See TWRP thread for known issues with Dual-boot.",
 				"@chip",
 				"choice_dualboot.prop",
-				"none",		"Singleboot",							"Keep single-boot only",														"select.selected",
+				"none",		"Singleboot",							"Keep single-boot. Recommended for daily drivers.",									"select.selected",
 				"4gb",   	"Dual boot, 4GB for Slot B",			"Dual boot with 4GB for userdata_b. For your device, this leaves about " +
 																		getvar("userdata_remaining_4gb") + "GB for userdata_a.",						"select",
 				"6gb",   	"Dual boot, 6GB for Slot B",			"Dual boot with 6GB for userdata_b. For your device, this leaves about " +
