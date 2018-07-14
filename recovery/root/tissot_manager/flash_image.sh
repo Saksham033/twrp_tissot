@@ -80,12 +80,12 @@ sparse_magic=`hexdump -e '"%02x"' -n 4 "$sourceFile"`
 if [ "$sparse_magic" = "ed26ff3a" ]; then
 	ui_print "    [i] Detected sparse image"
 	ui_print "    [#] Flashing via simg2img..."
-	simg2img $sourceFile $targetBlock
+	simg2img "$sourceFile" "$targetBlock"
 	result=$?
 else
 	ui_print "    [i] Sparse magic not found, assuming raw image"
 	ui_print "    [#] Flashing via dd..."
-	dd if=$sourceFile of=$targetBlock
+	dd if="$sourceFile" of="$targetBlock"
 	result=$?
 fi
 
