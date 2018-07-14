@@ -10,7 +10,7 @@
 # These are for flashing img's
 /system_image    emmc             /dev/block/bootdevice/by-name/system     flags=slotselect;flashimg=1;backup=0;display="System"
 /vendor_image    emmc             /dev/block/bootdevice/by-name/vendor     flags=slotselect;flashimg=1;backup=0;display="Vendor"
-/boot_nosurvival emmc             /dev/block/bootdevice/by-name/boot       flags=slotselect;flashimg=1;backup=0;display="Boot (exclude TWRP survival)"
+/boot_nosurvival emmc             /dev/block/bootdevice/by-name/boot       flags=slotselect;flashimg=1;backup=0;display="Boot (skip TWRP survival)"
 
 /sdcard1         auto             /dev/block/mmcblk1p1 /dev/block/mmcblk1  flags=display="Micro SDcard";storage;wipeingui;removable;andsec
 /usb-otg         auto             /dev/block/sda1      /dev/block/sda      flags=display="USB-OTG";storage;wipeingui;removable
