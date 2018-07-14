@@ -269,7 +269,6 @@ TW_RECOVERY_ADDITIONAL_RELINK_FILES := $(OUT)/system/lib64/android.hardware.boot
 TWRP_INCLUDE_LOGCAT := true
 TARGET_USES_LOGD := true
 TW_INCLUDE_FB2PNG := true
-TW_CUSTOM_THEME := $(DEVICE_PATH)/recovery/twrp-res
 # TWRP extra fixes thanks to mohancm
 TW_INPUT_BLACKLIST := "hbtp_vm"
 TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
