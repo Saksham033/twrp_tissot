@@ -1,0 +1,6 @@
+ - Reference from CosmicDan
+
+lunch rr_tissot-eng
+make clean
+make bootimage -j4
+(cd ./device/xiaomi/tissot/recovery/; ./make-boot-recovery-img-and-installer.sh)
