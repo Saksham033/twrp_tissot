@@ -124,26 +124,11 @@ fi
 # Repartition
 ui_print " ";
 ui_print "[#] Unmounting all eMMC partitions..."
-# This qseecomd jerk sometimes refuses to die, keeping mmcblk0 locked
-stop sbinqseecomd
-sleep 2
-kill `pidof qseecomd`
-mount | grep /dev/block/mmcblk0p | while read -r line ; do
-	thispart=`echo "$line" | awk '{ print $3 }'`
-	umount -f $thispart
-	sleep 0.5
-done
-mount | grep /dev/block/bootdevice/ | while read -r line ; do
-	thispart=`echo "$line" | awk '{ print $3 }'`
-	umount -f $thispart
-	sleep 0.5
-done
-sleep 2
-blockdev --rereadpt /dev/block/mmcblk0
+unmountAllAndRefreshPartitions
 
 partition_status=`cat /tmp/partition_status`
 if [ ! $partition_status -ge 0 ]; then
-	ui_print "[!] Error - partition status unknown! Was /tmp wiped? Aborting..."
+	ui_print "[!] Error - partition status unknown! Was /tmp wiped? RAM full? Aborting..."
 	exit 1
 fi
 

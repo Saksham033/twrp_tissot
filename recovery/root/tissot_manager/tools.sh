@@ -79,6 +79,15 @@ isHotBoot() {
 	fi
 }
 
+isModdedUpdateEngine() {
+	if [ -f "/sbin/update_engine_sideload_cosmicmod" ]; then
+		# remember: 0 = true with return codes
+		return 0
+	else
+		return 1
+	fi
+}
+
 isTrebleKernel() {
 	if cat /sys/firmware/devicetree/base/firmware/android/fstab/vendor/fsmgr_flags | grep -Fqe "slotselect"; then
 		# true/success
@@ -277,54 +286,76 @@ restoreTwrp() {
 }
 
 shouldDoPayloadInstall() {
-	targetSlot=`getOtherSlotLetter`
-	if [ ! -d /system_new_slot ]; then
-		mkdir /system_new_slot
-	fi
-	chmod 777 /system_new_slot
+	bootSlot=`getBootSlotLetter`
+	otherSlot=`getOtherSlotLetter`
+	currentSlot=`getCurrentSlotLetter`
 	umount -f /system
-	umount -f /system_new_slot
-	mount -o ro /dev/block/bootdevice/by-name/system_$targetSlot /system_new_slot
-	if [ -f "/system_new_slot/system/build.prop" ]; then
-		# don't bother with any of this if it's an empty slot
-		targetSlotId=`cat "/system_new_slot/system/build.prop" | grep -i "ro.build.display.id=" | sed 's|ro\.build\.display\.id=||'`
-		if [ "$targetSlotId" != "" ]; then
-			echo "id=$targetSlotId" > /tmp/aroma_prompt.prop
-		else
-			echo "id=Unknown [no ro.build.display.id prop found]" > /tmp/aroma_prompt.prop
+	for mountPoint in system_slot_boot system_slot_other; do
+		if [ ! -d /$mountPoint ]; then
+			mkdir /$mountPoint
 		fi
-		if [ "$targetSlot" = "a" ]; then
-			echo "slot=A" >> /tmp/aroma_prompt.prop
-		else
-			echo "slot=B" >> /tmp/aroma_prompt.prop
+		chmod 777 /$mountPoint
+		umount -f /$mountPoint
+	done
+	mount -o ro /dev/block/bootdevice/by-name/system_$bootSlot /system_slot_boot
+	mount -o ro /dev/block/bootdevice/by-name/system_$otherSlot /system_slot_other
+	
+	rm -f /tmp/aroma_prompt.prop
+	for slotSelection in slot_boot slot_other; do
+		if [ -f "/system_${slotSelection}/system/build.prop" ]; then
+			# don't bother with any of this if it's an empty slot
+			slotId=`cat "/system_${slotSelection}/system/build.prop" | grep -i "ro.build.display.id=" | sed 's|ro\.build\.display\.id=||'`
+			if [ "$slotId" != "" ]; then
+				echo "${slotSelection}_id=${slotId}" >> /tmp/aroma_prompt.prop
+			else
+				echo "${slotSelection}_id=Unknown [no ro.build.display.id prop found]" >> /tmp/aroma_prompt.prop
+			fi
 		fi
-		
-		# Do aroma prompt. It should touch /tmp/flash_confirm if the user agreed to install.
-		# It can get the build ID and slot from /tmp/aroma_prompt.prop "id" and "slot" props respectively.
-		pauseTwrp
-		echo "task=flash_slot_prompt" >> /tmp/aroma_prompt.prop
-		ui_print
-		/tissot_manager/aroma 1 `basename $OUT_FD` /tissot_manager/tissot_manager.zip >/tmp/tissot_manager_prompt.log
-		ui_print
-		rm "/tmp/aroma_prompt.prop"
-		umount -f /system_new_slot
-		# Don't rm -rf here just in case the unmount failed
-		#rm -rf /system_new_slot
-		resumeTwrp
-		
-		if [ -f "/tmp/flash_confirm" ]; then
-			# return true
-			rm "/tmp/flash_confirm"
-			return 0
-		else
-			ui_print "[!] Install aborted by user choice."
-			# return false
-			return 1
-		fi
+	done
+	
+	if [ "$bootSlot" = "a" ]; then
+		echo "slot_boot_letter=A" >> /tmp/aroma_prompt.prop
+		echo "slot_other_letter=B" >> /tmp/aroma_prompt.prop
 	else
-		ui_print "    [i] Slot $targetSlot appears to be empty"
+		echo "slot_boot_letter=B" >> /tmp/aroma_prompt.prop
+		echo "slot_other_letter=A" >> /tmp/aroma_prompt.prop
+	fi
+	echo "slot_current=${currentSlot}" >> /tmp/aroma_prompt.prop
+	
+	# Do aroma prompt. It should touch /tmp/flash_confirm if the user agreed to install.
+	# It can get the build ID and slot from /tmp/aroma_prompt.prop "id" and "slot" props respectively.
+	pauseTwrp
+	echo "task=flash_slot_prompt" >> /tmp/aroma_prompt.prop
+	ui_print
+	/tissot_manager/aroma 1 `basename $OUT_FD` /tissot_manager/tissot_manager.zip >/tmp/tissot_manager_prompt.log
+	ui_print
+	rm "/tmp/aroma_prompt.prop"
+	umount -f /system_slot_boot
+	umount -f /system_slot_other
+	resumeTwrp
+	
+	if [ -f "/tmp/flash_skip_payload_verification" ]; then
+		setprop tissotmanager.payload.ignoreverify 1
+	else
+		setprop tissotmanager.payload.ignoreverify 0
+	fi
+	rm -f "/tmp/flash_skip_payload_verification"
+	
+	if [ -f "/tmp/flash_confirm_other" ]; then
+		setprop tissotmanager.payload.sameslot 0
 		# return true
+		rm "/tmp/flash_confirm_other"
 		return 0
+	elif [ -f "/tmp/flash_confirm_boot" ]; then
+		setprop tissotmanager.payload.sameslot 1
+		# return true
+		rm "/tmp/flash_confirm_boot"
+		return 0
+	else
+		ui_print "[!] Install aborted by user choice."
+		# return false
+		rm -f "/tmp/flash_skip_survival"
+		return 1
 	fi
 }
 
@@ -491,6 +522,24 @@ doEncryptionPatch() {
 		umount -f /vendor > /dev/null 2>&1
 	fi
 	umount -f /system > /dev/null 2>&1
+}
+
+unmountAllAndRefreshPartitions() {
+	stop sbinqseecomd
+	sleep 1
+	kill `pidof qseecomd`
+	mount | grep /dev/block/mmcblk0p | while read -r line ; do
+		thispart=`echo "$line" | awk '{ print $3 }'`
+		umount -f $thispart
+		sleep 0.5
+	done
+	mount | grep /dev/block/bootdevice/ | while read -r line ; do
+		thispart=`echo "$line" | awk '{ print $3 }'`
+		umount -f $thispart
+		sleep 0.5
+	done
+	sleep 2
+	blockdev --rereadpt /dev/block/mmcblk0
 }
 
 #################################

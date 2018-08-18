@@ -33,6 +33,9 @@ if isHotBoot; then
 fi
 bootSlot=`getBootSlotLetter`
 otherSlot=`getOtherSlotLetter`
+if [ "`getprop tissotmanager.payload.sameslot`" == "1" ]; then
+	otherSlot=$bootSlot
+fi
 ui_print "    [i] Boot slot is $bootSlot, "
 ui_print "        installing update to slot $otherSlot"
 if isTreble; then
@@ -46,7 +49,15 @@ else
 	ui_print "            ignore this warning."
 fi
 ui_print
-
+if [ "`getprop tissotmanager.payload.ignoreverify`" == "1" ]; then
+	ui_print "    [i] Payload<>Recovery certificate verification"
+	ui_print "        failures will be ignored."
+else
+	ui_print "    [!] Payload<>Recovery certificate verification"
+	ui_print "        failures NOT ignored - you may get a flash"
+	ui_print "        error and a corrupted /system."
+fi
+ui_print
 
 # Remember the current recovery.log line count
 log_line_start=`wc -l < /tmp/recovery.log`
@@ -97,23 +108,40 @@ else
 	ui_print
 	if [ -f "/tmp/twrp_survival_success" ]; then
 		rm "/tmp/twrp_survival_success"
-		ui_print "[i] TWRP was automatically re-installed to the new slot."
+		ui_print "[i] TWRP was automatically re-installed to the target slot."
 		ui_print
 		ui_print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 		ui_print
-		ui_print "[!] Ensure you Reboot Recovery NOW to switch to the"
-		ui_print "    new Slot before flashing anything else!"
+		if [ "`getprop tissotmanager.payload.sameslot`" == "1" ]; then
+			ui_print "[#] Same-slot install performed. Attempting to"
+			ui_print "    refresh partitions (saves need to reboot)..."
+			unmountAllAndRefreshPartitions
+			ui_print "[i] ...done. If you see a red 'Failed to mount"
+			ui_print "    /system' message below, please reboot TWRP."
+			ui_print "    If not, you can now flash extras or reboot"
+			ui_print "    to System"
+		else
+			ui_print "[!] Ensure you Reboot Recovery NOW to switch to the"
+			ui_print "    new Slot before flashing anything else!"
+		fi
 		ui_print
 		ui_print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 		ui_print
 	else
 		ui_print "[i] Be sure to do the following now:"
-		ui_print "    - Flash TWRP immediately;"
-		ui_print "    - Reboot Recovery to switch to the new slot;"
+		ui_print "    - Flash TWRP immediately, if desired;"
+		if [ "`getprop tissotmanager.payload.sameslot`" == "1" ]; then
+			ui_print "    - Reboot Recovery to reload partitions;"
+		else
+			ui_print "    - Reboot Recovery to switch to the new slot;"
+		fi
 		ui_print "    - Install any other ZIPs you desire (e.g. Gapps, Magisk, etc);"
 	fi
 fi
 ui_print
 ui_print "--------------------------------------------------"
 ui_print
+# reset props here (aroma is annoying)
+setprop tissotmanager.payload.sameslot 0
+setprop tissotmanager.payload.ignoreverify 0
 exit $?

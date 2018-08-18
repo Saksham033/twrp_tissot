@@ -9,24 +9,55 @@ fontresload( "1", "ttf/Roboto-Regular.ttf", "14" );
 # custom UI prompts
 if file_getprop("/tmp/aroma_prompt.prop", "task") == "flash_slot_prompt" then
 	ini_set("text_next", "OK");
-	setvar("id", file_getprop("/tmp/aroma_prompt.prop", "id"));
-	setvar("slot", file_getprop("/tmp/aroma_prompt.prop", "slot"));
+	setvar("slot_boot_id", file_getprop("/tmp/aroma_prompt.prop", "slot_boot_id"));
+	setvar("slot_boot_letter", file_getprop("/tmp/aroma_prompt.prop", "slot_boot_letter"));
+	setvar("slot_other_id", file_getprop("/tmp/aroma_prompt.prop", "slot_other_id"));
+	setvar("slot_other_letter", file_getprop("/tmp/aroma_prompt.prop", "slot_other_letter"));
+	setvar("slot_current", file_getprop("/tmp/aroma_prompt.prop", "slot_current"));
+	if (!getvar("slot_current") == "slot_boot_letter") then
+		textbox(
+			"Error",
+			"Current slot is not boot slot",
+			"@warning",
+			"Your current slot is " + getvar("slot_current") + " but the boot slot is " + getvar("slot_boot_letter") + ". Please change back to the boot slot before installing a payload ZIP."
+		);
+		exit("");
+	endif;
+	# set some vars beforehand just in case we don't have the modded update_engine
+	setvar("isModdedUpdateEngine", exec("/sbin/sh", "/tissot_manager/tools.sh", "isModdedUpdateEngine"));
+	setvar("selectableIfModdedUE", "select");
+	setvar("checkableIfModdedUE", "check");
+	if getvar("isModdedUpdateEngine")==1 then
+		setvar("selectableIfModdedUE", "hidden");
+		setvar("checkableIfModdedUE", "hidden");
+	endif;
 	form(
 		"Confirm ZIP install",
-		"You are about to install a ROM into boot Slot " + getvar("slot") + ". To change install slot, you must reboot recovery with the <i>other</i> slot active.",
+		"You are about to install a payload ZIP. Please select which slot to install to and any options.",
 		"@chip",
 		"aroma_prompt_result.prop",
-		"confirm",	"Confirm",					"Confirm flashing to Slot " + getvar("slot") + ". This will erase existing ROM: '" +
-													"<b>" + getvar("id") + "</b>'.",												"select.selected",
+		"confirm_other",	"Other Slot (" + getvar("slot_other_letter") + ")" ,	"Confirm flashing to other slot " + getvar("slot_other_letter") + ". " +
+																					"This will replace existing ROM: '<b>" + getvar("slot_other_id") + "</b>'.",			"select.selected",
+		"confirm_boot",		"Current Slot (" + getvar("slot_boot_letter") + ")" ,	"Confirm flashing to current slot " + getvar("slot_boot_letter") + ". " +
+																					"This will replace existing ROM: '<b>" + getvar("slot_boot_id") + "</b>'.",			getvar("selectableIfModdedUE"),
+													
 		"cancel",	"Cancel",					"Cancel installation and return to TWRP.",											"select",
 		"survival",	"TWRP/RAMDisk survival",	"Perform TWRP/RAMDisk survival if possible. For advanced users: uncheck this " + 
-													"to use the 100% original boot image in the payload.",							"check.checked"
+													"to use the 100% original boot image in the payload.",							"check.checked",
+		"verify",	"Payload Verification",		"Perform payload verification. Enabling this will cause an install failure on " + 
+													"newer LOS-based ROM's.",														getvar("checkableIfModdedUE")
 	);
-	if prop("aroma_prompt_result.prop","root") == "confirm" then
-		write("/tmp/flash_confirm", "");
+	if prop("aroma_prompt_result.prop","root") == "confirm_other" then
+		write("/tmp/flash_confirm_other", "");
+	endif;
+	if prop("aroma_prompt_result.prop","root") == "confirm_boot" then
+		write("/tmp/flash_confirm_boot", "");
 	endif;
 	if prop("aroma_prompt_result.prop","survival") != "1" then
 		write("/tmp/flash_skip_survival", "");
+	endif;
+	if prop("aroma_prompt_result.prop","verify") == "0" then
+		write("/tmp/flash_skip_payload_verification", "");
 	endif;
 	exit("");
 endif;

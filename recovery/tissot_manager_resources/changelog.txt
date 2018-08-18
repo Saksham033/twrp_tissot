@@ -1,6 +1,9 @@
-<b>2.4.1</b>
+<b>2.5</b>
 
 <*>Update to TWRP 3.2.3</*>
+<*>Add option to ignore verification when flashing a payload (default enabled)</*>
+<*>Add option to set target slot when flashing a payload (default is inactive slot, as per standard)</*>
+<*>Merge performance-mode update_engine change from upstream (not sure if relevant for Recovery installs)</*>
 
 
 
