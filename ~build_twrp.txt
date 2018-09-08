@@ -1,4 +1,11 @@
- - Reference from CosmicDan
+- Reference from CosmicDan (for RR tree)
+
+1) Clone TWRP to bootable/recovery-twrp
+
+2) Clone my update_engine mod to system/update_engine (replace AOSP):
+	git clone git@github.com:CosmicDan-Android/android_system_update_engine_tissotmanager-mod.git
+
+3) Build:
 
 lunch rr_tissot-eng
 make clean
